@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+
+
+	<link href="../node_modules/bootstrap/dist/css/bootstrap.css" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../node_modules/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="../node_modules/bootstrap-social/bootstrap-social.css">
+	<link rel="stylesheet" type="text/css" href="css/style.css" />
+	<title>AWAP 2022 Viewer</title>
+</head>
+<style>
+	body {
+		font-family: 'Open Sans', sans-serif
+	}
+</style>
+
+<body>
+
+	<div id="helpModal" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-lg" role="content">
+			<div class="modal-content">
+				<div class="modal-body">
+					<p>'A/D' or 'Left/Right' : Change frames</p>
+					<p>'Space' : Play/Pause</p>
+					<p>'W/S' or 'Up/Down' : Change speed</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="container-fluid">
+		<div class="row row-content top-pad">
+			<div class="col-8">
+				<canvas class="board" id="map-canvas" height="0" width="0"></canvas>
+			</div>
+			<div class="col-4">
+
+				<!-- <div class="row row-content"> -->
+					<h1>AWAP 2022 Viewer <a class="btn btn-social-icon btn-github" href="https://github.com/rzhan11/cell-towers-viewer.git"><i class="fa fa-github"></i></a></h1>
+					<hr />
+				<!-- </div> -->
+
+				<div class="row row-content">
+					<div class="col-auto">
+						<label class="btn btn-primary btn-small">
+						    <input type="file" id="file-input"/>
+						    <i></i> Upload Replay File
+						</label>
+					</div>
+					<div class="col-auto">
+						<button class="btn btn-primary btn-small" id="help-modal-button">Help</button>
+					</div>
+				</div>
+
+				<div class="row row-content">
+					<div class='col-2 align-self-center'>
+						<p class='no-margin'>Round:</p>
+					</div>
+					<div class="col-auto">
+						<button id="prev-round-button" class="btn btn-primary btn-sm">&lt; Prev</button>
+					</div>
+					<div class="col-5" align="center">
+						<p style="display:inline" id="round-text">0 / 0</p>
+					</div>
+					<div class="col-auto">
+						<button id="next-round-button" class="btn btn-primary btn-sm">Next &gt;</button>
+					</div>
+				</div>
+
+				<div class="row row-content">
+					<div class="col-2 align-self-center">
+						<p class='no-margin'>Speed:</p>
+					</div>
+					<div class="col-auto">
+						<button id="slower-speed-button" class="btn btn-primary btn-sm">&lt; Prev</button>
+					</div>
+					<div class="col-5" align="center">
+						<p style=" display:inline" id="speed-text"></p>
+					</div>
+					<div class="col-auto">
+						<button id="faster-speed-button" class="btn btn-primary btn-sm">Next &gt;</button>
+					</div>
+				</div>
+
+				<div class="row row-content">
+					<div class="col-2">
+						<button class="btn btn-primary btn-small" id="play-button">Play</button>
+					</div>
+					<div class="col-10 align-self-center">
+						<div class="slidecontainer">
+							<input type="range" min="1" max="1" value="0" class="slider" id="frame-range" style="width: calc(100% - 40px); max-width: 100%">
+						</div>
+					</div>
+				</div>
+
+				<!-- <div class="row row-content"> -->
+				<!-- </div> -->
+
+				<!-- <div class="row row-content"> -->
+					<p id="metadata-text"></p>
+				<!-- </div> -->
+
+				<!-- <div class="row row-content"> -->
+					<div align="center">
+						<p id="p1-money-text"></p>
+						<p id="p2-money-text"></p>
+						<p id="game-info-text"></p>
+					</div>
+				<!-- </div> -->
+
+				<br>
+			</div>
+		</div>
+	</div>
+
+	<script src="../node_modules/jquery/dist/jquery.slim.min.js"></script>
+	<script src="../node_modules/popper.js/dist/umd/popper.min.js"></script>
+	<script src="../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+
+	<script src="../js/fabric.js"></script>
+	<script src="../js/test.js"></script>
+
+
+</body>
+
+</html>
