@@ -22,12 +22,18 @@ const YELLOW = "#FFFF00";
 
 var outerPadding = 5;
 var innerPadding = 1;
-var squareSize = 15;
+var tileSize = 15;
 var wordFontSize = 15;
 var wordOffset = 3;
 var edgeWidth = 5;
+var shadeTileSize = tileSize + innerPadding;
+var shadeEdgeWidth = 4;
 
-const canvas = new fabric.Canvas('map-canvas', { renderOnAddRemove: false });
+const canvas = new fabric.Canvas('map-canvas', {
+  renderOnAddRemove: false,
+  selection: false,
+  preserveObjectStacking: true
+ });
 
 function initCanvas() {
   canvas.setWidth(window.innerWidth - 50)
@@ -75,52 +81,115 @@ function initCanvas() {
     this.isDragging = false;
     this.selection = true;
   });
+  // canvas.on('mouse:over', function(e) {
+  //   console.log(e.target)
+  //   e.target.set('fill', 'yellow');
+  //   canvas.renderAll();
+  // });
 }
 initCanvas();
 
-var canvasCache;
 var tileGrid;
 var iconGrid;
+var shadeGrid;
 
 function initCanvasObjects() {
-  canvasCache = [];
+  var backgroundObjects = [];
   tileGrid = init2DArray(frameWidth, frameHeight);
   iconGrid = init2DArray(frameWidth, frameHeight);
+  shadeGrid = init2DArray(frameWidth, frameHeight);
 
-  var canvasSize = 2 * outerPadding + (frameWidth - 1) * innerPadding + frameWidth * squareSize;
-  drawRect(0, 0, canvasSize, canvasSize, DARK_GRAY);
+  var canvasSize = 2 * outerPadding + (frameWidth - 1) * innerPadding + frameWidth * tileSize;
+
+  // base image
+  var baseObject = drawRect(canvasSize / 2, canvasSize / 2, canvasSize, canvasSize, DARK_GRAY);
+  backgroundObjects.push(baseObject);
 
   // tiles
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
-      var x = outerPadding + i * innerPadding + i * squareSize;
-      var y = outerPadding + j * innerPadding + j * squareSize;
-      tileGrid[i][j] = drawRect(x, y, squareSize, squareSize, WHITE);
+      var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
+      var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
+
+      var grayscale = 256 * (1 - popMap[i][j] / 10);
+      var boxColor = rgb(grayscale, grayscale, grayscale);
+      tileGrid[i][j] = drawRect(x, y, tileSize, tileSize, boxColor);
+      backgroundObjects.push(tileGrid[i][j]);
     }
   }
 
   // icons
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
-      var wx = outerPadding + i * innerPadding + (i) * squareSize;
-      var wy = outerPadding + j * innerPadding + (j) * squareSize;
+      var wx = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
+      var wy = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
       iconGrid[i][j] = drawText("", wx, wy, 15, BLACK);
     }
   }
 
+  // shades
+  for (var i = 0; i < frameHeight; i++) {
+    for (var j = 0; j < frameWidth; j++) {
+      var x = outerPadding + i * innerPadding + i * tileSize;
+      var y = outerPadding + j * innerPadding + j * tileSize;
+      shadeGrid[i][j] = drawBox(x, y, shadeTileSize, shadeTileSize, YELLOW, shadeEdgeWidth, 0.0);
+    }
+  }
+
   // add to groups
-  canvas.add(new fabric.Group(canvasCache, {selectable: false}));
+  // for (var el of canvasCache) {
+  //   el.set("selectable", false)
+  //   canvas.add(el);
+  // }
+  var tileGroup = new fabric.Group(backgroundObjects, {"selectable": false});
+  // tileGroup.cloneAsImage(image => {
+    // image.set();
+
+    // canvas.backgroundImage = image;
+    // canvas.add(image, {"selectable": false});
+  // });
+  canvas.add(tileGroup);
+
+  var iconGroup = new fabric.Group(iconGrid.flat(), {"selectable": false});
+  canvas.add(iconGroup);
+
+  var shadeGroup = new fabric.Group(shadeGrid.flat(), {"selectable": false});
+  canvas.add(shadeGroup);
+
+  // back to front
+  // var layerOrder = [tileGroup, iconGroup, shadeGroup];
+  // for (var l in layerOrder) {
+  //   canvas.bringToFront(l);
+  // }
+
   canvas.renderAll();
 }
 
-function drawRect(x, y, width, height, color) {
+function drawBox(x, y, width, height, color, thickness, opacity=1) {
+  var obj = new fabric.Rect({
+    width: width, height: height,
+    left: y, top: x,
+    stroke: color,
+    strokeWidth: thickness,
+    fill: "transparant",
+    opacity: opacity,
+    originX: "center",
+    originY: "center",
+    objectCaching: false
+  });
+  return obj;
+}
+
+function drawRect(x, y, width, height, color, opacity=1) {
   var obj = new fabric.Rect({
     width: width, height: height,
     left: y, top: x,
     fill: color,
+    opacity: opacity,
+    originX: "center",
+    originY: "center",
     objectCaching: false
   });
-  canvasCache.push(obj);
   return obj;
 }
 
@@ -129,10 +198,11 @@ function drawText(text, x, y, fontSize, color) {
     left: y, top: x,
     fill: color,
     fontSize: fontSize,
-    textAlign: "center",
+    fontStyle: "bold",
+    originX: "center",
+    originY: "center",
     objectCaching: false
   });
-  canvasCache.push(obj);
   return obj;
 }
 
@@ -141,15 +211,6 @@ function drawInitFrame() {
 
   roundNum = 0;
   curFrame = JSON.parse(JSON.stringify(baseFrame));
-
-  // set tile colors
-  for (var i = 0; i < frameHeight; i++) {
-    for (var j = 0; j < frameWidth; j++) {
-      var grayscale = 256 * (1 - popMap[i][j] / 100);
-      var boxColor = rgb(grayscale, grayscale, grayscale);
-      tileGrid[i][j].set("fill", boxColor)
-    }
-  }
 
   // iterate through each tile and add icon/symbol for units
   for (var i = 0; i < frameHeight; i++) {
@@ -403,10 +464,10 @@ Updates visual menu box of game stats
 function displayGameInfo() {
 
   // display game info text
-  p1MoneyText.style.color = BLUE;
-  p1MoneyText.innerHTML = "Player 1 Money: " + moneyHistory[roundNum][0] + "<br>";
-  p2MoneyText.style.color = RED;
-  p2MoneyText.innerHTML = "Player 2 Money: " + moneyHistory[roundNum][1] + "<br>";
+  p1MoneyText.style.color = RED;
+  p1MoneyText.innerHTML = "Team RED Money: " + moneyHistory[roundNum][0] + "<br>";
+  p2MoneyText.style.color = BLUE;
+  p2MoneyText.innerHTML = "Team BLUE Money: " + moneyHistory[roundNum][1] + "<br>";
   if (roundNum == metadata.maxRound) {
     gameInfoText.innerHTML = "Winner: ";
     if (winner == "WHITE") {
