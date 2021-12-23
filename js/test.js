@@ -26,8 +26,22 @@ var tileSize = 15;
 var wordFontSize = 15;
 var wordOffset = 3;
 var edgeWidth = 5;
+
 var shadeTileSize = tileSize + innerPadding;
 var shadeEdgeWidth = 4;
+var shadeOpacity = 0.5
+
+var curOverTile = null;
+function getTileFromPointer(x, y) {
+  // ty, tx are supposed to be in this order
+  // var scale = this.viewportTransform
+  var ty = Math.floor( (x - outerPadding + innerPadding / 2) / (innerPadding + tileSize) );
+  var tx = Math.floor( (y - outerPadding + innerPadding / 2) / (innerPadding + tileSize) );
+  if (0 <= tx && tx < frameWidth && 0 <= ty && ty < frameHeight) {
+    return [tx, ty];
+  }
+  return null;
+}
 
 const canvas = new fabric.Canvas('map-canvas', {
   renderOnAddRemove: false,
@@ -57,7 +71,8 @@ function initCanvas() {
 
   // enable pan
   canvas.on('mouse:down', function(opt) {
-  var evt = opt.e;
+    console.log(this.viewportTransform);
+    var evt = opt.e;
     this.isDragging = true;
     this.selection = false;
     this.lastPosX = evt.clientX;
@@ -81,10 +96,21 @@ function initCanvas() {
     this.isDragging = false;
     this.selection = true;
   });
-  // canvas.on('mouse:over', function(e) {
-  //   console.log(e.target)
-  //   e.target.set('fill', 'yellow');
-  //   canvas.renderAll();
+
+  // setup highlighting
+  // canvas.on('mouse:move', function(e) {
+  //   console.log(e);
+  //
+  //   if (curOverTile != null) {
+  //     curOverTile.opacity = 0.0;
+  //   }
+  //   var tloc = getTileFromPointer(e.pointer.x, e.pointer.y);
+  //   if (tloc != null) {
+  //     curOverTile = shadeGrid[tloc[0]][tloc[1]];
+  //     curOverTile.opacity = shadeOpacity;
+  //     // e.target.set('fill', 'yellow');
+  //     this.renderAll();
+  //   }
   // });
 }
 initCanvas();
@@ -130,8 +156,8 @@ function initCanvasObjects() {
   // shades
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
-      var x = outerPadding + i * innerPadding + i * tileSize;
-      var y = outerPadding + j * innerPadding + j * tileSize;
+      var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
+      var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
       shadeGrid[i][j] = drawBox(x, y, shadeTileSize, shadeTileSize, YELLOW, shadeEdgeWidth, 0.0);
     }
   }
@@ -148,13 +174,18 @@ function initCanvasObjects() {
     // canvas.backgroundImage = image;
     // canvas.add(image, {"selectable": false});
   // });
-  canvas.add(tileGroup);
+  canvas.setBackgroundImage(tileGroup);
+  // canvas.add(tileGroup);
 
-  var iconGroup = new fabric.Group(iconGrid.flat(), {"selectable": false});
-  canvas.add(iconGroup);
+  var activeObjects = iconGrid.flat().concat(shadeGrid.flat());
+  canvas.add(new fabric.Group(activeObjects, { "selectable": false }));
 
-  var shadeGroup = new fabric.Group(shadeGrid.flat(), {"selectable": false});
-  canvas.add(shadeGroup);
+
+  // var iconGroup = new fabric.Group(iconGrid.flat(), {"selectable": false});
+  // canvas.add(iconGroup);
+  //
+  // var shadeGroup = new fabric.Group(shadeGrid.flat(), {"selectable": false});
+  // canvas.add(shadeGroup);
 
   // back to front
   // var layerOrder = [tileGroup, iconGroup, shadeGroup];
@@ -243,12 +274,15 @@ var fileInput = document.getElementById("file-input");
 fileInput.addEventListener("change", uploadReplay, false);
 
 // base data from
+var baseFrame = null;
 var frameChanges = null;
+
 var popMap = null;
+var passMap = null;
 var structureMap = null;
+
 var moneyHistory = null;
 var utilityHistory = null;
-var baseFrame = null;
 
 var metadataText = document.getElementById("metadata-text");
 var metadata = {};
@@ -325,17 +359,24 @@ function loadData(data) {
   frameWidth = mapData.length;
   frameHeight = mapData[0].length;
 
+  passMap = init2DArray(frameWidth, frameHeight);
+  for (var i = 0; i < frameWidth; i++) {
+    for (var j = 0; j < frameHeight; j++) {
+      passMap[i][j] = mapData[i][j][0];
+    }
+  }
+
   popMap = init2DArray(frameWidth, frameHeight);
   for (var i = 0; i < frameWidth; i++) {
     for (var j = 0; j < frameHeight; j++) {
-      popMap[i][j] = mapData[i][j][0];
+      popMap[i][j] = mapData[i][j][1];
     }
   }
 
   structureMap = init2DArray(frameWidth, frameHeight);
   for (var i = 0; i < frameWidth; i++) {
     for (var j = 0; j < frameHeight; j++) {
-      structureMap[i][j] = mapData[i][j][1];
+      structureMap[i][j] = mapData[i][j][2];
     }
   }
 
