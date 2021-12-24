@@ -43,59 +43,18 @@ function getTileFromPointer(x, y) {
   return null;
 }
 
-const canvas = new fabric.Canvas('map-canvas', {
-  renderOnAddRemove: false,
-  selection: false,
-  preserveObjectStacking: true
- });
+var maxZoom = 5;
+var minZoom = 0.5;
 
-function initCanvas() {
+function initCanvas(canvasID) {
+
+  var canvas = new fabric.Canvas(canvasID, {
+    renderOnAddRemove: false,
+    selection: false
+  });
+
   canvas.setWidth(window.innerWidth - 50)
   canvas.setHeight(window.innerHeight - 50)
-
-  var maxZoom = 5;
-  var minZoom = 0.5;
-
-  // enable zoom
-  canvas.on('mouse:wheel', function(opt) {
-    var delta = opt.e.deltaY;
-    var zoom = canvas.getZoom();
-    zoom *= 0.999 ** delta;
-    if (zoom > maxZoom) zoom = maxZoom;
-    if (zoom < minZoom) zoom = minZoom;
-    canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-    opt.e.preventDefault();
-    opt.e.stopPropagation();
-    canvas.renderAll();
-  });
-
-  // enable pan
-  canvas.on('mouse:down', function(opt) {
-    console.log(this.viewportTransform);
-    var evt = opt.e;
-    this.isDragging = true;
-    this.selection = false;
-    this.lastPosX = evt.clientX;
-    this.lastPosY = evt.clientY;
-  });
-  canvas.on('mouse:move', function(opt) {
-    if (this.isDragging) {
-      var e = opt.e;
-      var vpt = this.viewportTransform;
-      vpt[4] += e.clientX - this.lastPosX;
-      vpt[5] += e.clientY - this.lastPosY;
-      this.requestRenderAll();
-      this.lastPosX = e.clientX;
-      this.lastPosY = e.clientY;
-    }
-  });
-  canvas.on('mouse:up', function(opt) {
-    // on mouse up we want to recalculate new interaction
-    // for all objects, so we call setViewportTransform
-    this.setViewportTransform(this.viewportTransform);
-    this.isDragging = false;
-    this.selection = true;
-  });
 
   // setup highlighting
   // canvas.on('mouse:move', function(e) {
@@ -112,16 +71,81 @@ function initCanvas() {
   //     this.renderAll();
   //   }
   // });
-}
-initCanvas();
 
-var tileGrid;
+  return canvas;
+}
+
+function linkCanvasMotion(frontCanvas) {
+  // enable zoom
+  frontCanvas.on('mouse:wheel', function(opt) {
+    var delta = opt.e.deltaY;
+    var zoom = this.getZoom();
+    zoom *= 0.999 ** delta;
+    if (zoom > maxZoom) zoom = maxZoom;
+    if (zoom < minZoom) zoom = minZoom;
+
+    for (var canvas of allCanvases) {
+      canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+      canvas.renderAll();
+    }
+
+    opt.e.preventDefault();
+    opt.e.stopPropagation();
+  });
+
+  // enable pan
+  frontCanvas.on('mouse:down', function(opt) {
+    var evt = opt.e;
+    this.isDragging = true;
+    this.selection = false;
+    this.lastPosX = evt.clientX;
+    this.lastPosY = evt.clientY;
+  });
+  frontCanvas.on('mouse:move', function(opt) {
+    if (this.isDragging) {
+      var e = opt.e;
+      for (var canvas of allCanvases) {
+        var vpt = canvas.viewportTransform;
+        vpt[4] += e.clientX - this.lastPosX;
+        vpt[5] += e.clientY - this.lastPosY;
+        canvas.requestRenderAll();
+      }
+      this.lastPosX = e.clientX;
+      this.lastPosY = e.clientY;
+    }
+  });
+  frontCanvas.on('mouse:up', function(opt) {
+    // on mouse up we want to recalculate new interaction
+    // for all objects, so we call setViewportTransform
+    for (var canvas of allCanvases) {
+      canvas.setViewportTransform(canvas.viewportTransform);
+    }
+    this.isDragging = false;
+    this.selection = true;
+  });
+}
+
+const passCanvas = initCanvas("pass-canvas");
+const iconCanvas = initCanvas("icon-canvas");
+const popCanvas = initCanvas("pop-canvas");
+var allCanvases = [passCanvas, iconCanvas, popCanvas];
+linkCanvasMotion(popCanvas);
+
+
+function render() {
+  for (var canvas of allCanvases) {
+    canvas.renderAll();
+  }
+}
+
+var passGrid;
+var popGrid;
 var iconGrid;
 var shadeGrid;
 
 function initCanvasObjects() {
-  var backgroundObjects = [];
-  tileGrid = init2DArray(frameWidth, frameHeight);
+  passGrid = init2DArray(frameWidth, frameHeight);
+  popGrid = init2DArray(frameWidth, frameHeight);
   iconGrid = init2DArray(frameWidth, frameHeight);
   shadeGrid = init2DArray(frameWidth, frameHeight);
 
@@ -129,7 +153,6 @@ function initCanvasObjects() {
 
   // base image
   var baseObject = drawRect(canvasSize / 2, canvasSize / 2, canvasSize, canvasSize, DARK_GRAY);
-  backgroundObjects.push(baseObject);
 
   // tiles
   for (var i = 0; i < frameHeight; i++) {
@@ -137,10 +160,9 @@ function initCanvasObjects() {
       var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
       var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
 
-      var grayscale = 256 * (1 - popMap[i][j] / 10);
+      var grayscale = 256 * (1 - passMap[i][j] / 10);
       var boxColor = rgb(grayscale, grayscale, grayscale);
-      tileGrid[i][j] = drawRect(x, y, tileSize, tileSize, boxColor);
-      backgroundObjects.push(tileGrid[i][j]);
+      passGrid[i][j] = drawRect(x, y, tileSize, tileSize, boxColor);
     }
   }
 
@@ -153,6 +175,17 @@ function initCanvasObjects() {
     }
   }
 
+  // tiles
+  for (var i = 0; i < frameHeight; i++) {
+    for (var j = 0; j < frameWidth; j++) {
+      var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
+      var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
+
+      var radius = popMap[i][j] * tileSize / 50;
+      popGrid[i][j] = drawCircle(x, y, radius, GREEN);
+    }
+  }
+
   // shades
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
@@ -162,38 +195,29 @@ function initCanvasObjects() {
     }
   }
 
-  // add to groups
-  // for (var el of canvasCache) {
-  //   el.set("selectable", false)
-  //   canvas.add(el);
-  // }
-  var tileGroup = new fabric.Group(backgroundObjects, {"selectable": false});
-  // tileGroup.cloneAsImage(image => {
-    // image.set();
+  // tiles (passability)
+  var tileObjects = passGrid.flat();
+  tileObjects.unshift(baseObject);
+  var tileGroup = new fabric.Group(tileObjects, {"selectable": false});
+  passCanvas.setBackgroundImage(tileGroup);
 
-    // canvas.backgroundImage = image;
-    // canvas.add(image, {"selectable": false});
-  // });
-  canvas.setBackgroundImage(tileGroup);
-  // canvas.add(tileGroup);
+  // icons
+  var iconObjects = iconGrid.flat();
+  var iconGroup = new fabric.Group(iconObjects, {"selectable": false});
+  iconCanvas.add(iconGroup);
 
-  var activeObjects = iconGrid.flat().concat(shadeGrid.flat());
-  canvas.add(new fabric.Group(activeObjects, { "selectable": false }));
+  // population
+  var popObjects = popGrid.flat();
+  var popGroup = new fabric.Group(popObjects, {"selectable": false});
+  popCanvas.add(popGroup);
 
 
-  // var iconGroup = new fabric.Group(iconGrid.flat(), {"selectable": false});
-  // canvas.add(iconGroup);
-  //
-  // var shadeGroup = new fabric.Group(shadeGrid.flat(), {"selectable": false});
-  // canvas.add(shadeGroup);
 
-  // back to front
-  // var layerOrder = [tileGroup, iconGroup, shadeGroup];
-  // for (var l in layerOrder) {
-  //   canvas.bringToFront(l);
-  // }
+  // var activeObjects = iconGrid.flat().concat(shadeGrid.flat());
+  // canvas.add(new fabric.Group(activeObjects, { "selectable": false }));
 
-  canvas.renderAll();
+
+  render();
 }
 
 function drawBox(x, y, width, height, color, thickness, opacity=1) {
@@ -237,6 +261,18 @@ function drawText(text, x, y, fontSize, color) {
   return obj;
 }
 
+function drawCircle(x, y, radius, color) {
+  var obj = new fabric.Circle({
+    left: y, top: x,
+    radius: radius,
+    fill: color,
+    originX: "center",
+    originY: "center",
+    objectCaching: false
+  });
+  return obj;
+}
+
 function drawInitFrame() {
   console.log("draw init frame")
 
@@ -266,7 +302,7 @@ function drawInitFrame() {
     }
   }
 
-  canvas.renderAll();
+  render();
   setRoundNum(0);
 }
 
@@ -473,8 +509,8 @@ function getNewFrame(targetRound, oldRoundNum) {
       iconGrid[x][y].set("text", textSymbol);
     }
   }
-  canvas.renderAll();
 
+  render();
 }
 
 function setRoundNum(num) {
