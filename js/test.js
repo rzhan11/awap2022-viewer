@@ -19,7 +19,6 @@ const RED = "#FF0000";
 const GREEN = "#00FF00";
 const BLUE = "#0000FF";
 const YELLOW = "#FFFF00";
-const NEON_PURPLE = "#00FF00"
 
 var outerPadding = 5;
 var innerPadding = 1;
@@ -28,9 +27,16 @@ var wordFontSize = 15;
 var wordOffset = 3;
 var edgeWidth = 5;
 
-var shadeTileSize = tileSize + innerPadding;
+var fullTileSize = tileSize + innerPadding;
+
+var mapPixelSize = 2 * outerPadding + (frameWidth - 1) * innerPadding + frameWidth * tileSize;
+
+var shadeTileSize = fullTileSize;
 var shadeEdgeWidth = 2;
 var shadeOpacity = 1;
+
+var tooltipSize = fullTileSize;
+
 
 var curOverTile = null;
 function getTileFromPointer(x, y) {
@@ -44,11 +50,30 @@ function getTileFromPointer(x, y) {
   return null;
 }
 
+function updateTooltip(e) {
+  var pointer = e.absolutePointer;
+
+  var adjust = outerPadding - innerPadding / 2;
+
+  var tx = Math.floor( (pointer.x - adjust) / fullTileSize );
+  var ty = Math.floor( (pointer.y - adjust) / fullTileSize );
+
+  tooltipObject.left = (tx + 0.5) * fullTileSize + adjust;
+  tooltipObject.top = (ty + 0.5) * fullTileSize + adjust;
+
+  if (0 <= tx && tx < frameWidth && 0 <= ty && ty < frameHeight) {
+    tooltipObject.set("visible", true);
+  } else {
+    tooltipObject.set("visible", false);
+  }
+
+  frontCanvas.requestRenderAll();
+}
+
 var maxZoom = 5;
 var minZoom = 0.5;
 
 function initCanvas(canvasID) {
-
   var canvas = new fabric.Canvas(canvasID, {
     renderOnAddRemove: false,
     selection: false
@@ -57,26 +82,10 @@ function initCanvas(canvasID) {
   canvas.setWidth(window.innerWidth)
   canvas.setHeight(window.innerHeight)
 
-  // setup highlighting
-  // canvas.on('mouse:move', function(e) {
-  //   console.log(e);
-  //
-  //   if (curOverTile != null) {
-  //     curOverTile.opacity = 0.0;
-  //   }
-  //   var tloc = getTileFromPointer(e.pointer.x, e.pointer.y);
-  //   if (tloc != null) {
-  //     curOverTile = shadeGrid[tloc[0]][tloc[1]];
-  //     curOverTile.opacity = shadeOpacity;
-  //     // e.target.set('fill', 'yellow');
-  //     this.renderAll();
-  //   }
-  // });
-
   return canvas;
 }
 
-function linkCanvasMotion(frontCanvas) {
+function syncCanvasMotion() {
   // enable zoom
   frontCanvas.on('mouse:wheel', function(opt) {
     var delta = opt.e.deltaY;
@@ -124,14 +133,32 @@ function linkCanvasMotion(frontCanvas) {
     this.isDragging = false;
     this.selection = true;
   });
+
+  // enable tooltip
+  // frontCanvas.on('mouse:move', function(opt) {
+  //     this.requestRenderAll();
+  // });
+
+
+
+  // setup highlighting
+  frontCanvas.on('mouse:move', function(e) {
+    if (tooltipObject != null) {
+      updateTooltip(e);
+    }
+  });
 }
 
 const passCanvas = initCanvas("pass-canvas");
 const iconCanvas = initCanvas("icon-canvas");
 const shadeCanvas = initCanvas("shade-canvas");
 const popCanvas = initCanvas("pop-canvas");
-var allCanvases = [passCanvas, iconCanvas, shadeCanvas, popCanvas];
-linkCanvasMotion(popCanvas);
+const tooltipCanvas = initCanvas("tooltip-canvas");
+
+var allCanvases = [passCanvas, iconCanvas, shadeCanvas, popCanvas, tooltipCanvas];
+var frontCanvas = tooltipCanvas;
+
+syncCanvasMotion();
 
 
 function renderAllCanvases() {
@@ -144,6 +171,7 @@ var passGrid;
 var popGrid;
 var iconGrid;
 var shadeGrid;
+var tooltipObject;
 
 function initCanvasObjects() {
   passGrid = init2DArray(frameWidth, frameHeight);
@@ -151,7 +179,6 @@ function initCanvasObjects() {
   iconGrid = init2DArray(frameWidth, frameHeight);
   shadeGrid = init2DArray(frameWidth, frameHeight);
 
-  var canvasSize = 2 * outerPadding + (frameWidth - 1) * innerPadding + frameWidth * tileSize;
 
   // tiles
   for (var i = 0; i < frameHeight; i++) {
@@ -164,9 +191,9 @@ function initCanvasObjects() {
     }
   }
 
-  var baseObject = drawRect(canvasSize / 2, canvasSize / 2, canvasSize, canvasSize, DARK_GRAY);
+  var baseObject = drawRect(mapPixelSize / 2, mapPixelSize / 2, mapPixelSize, mapPixelSize, DARK_GRAY);
   var tileObjects = passGrid.flat();
-  tileObjects.unshift(baseObject);
+  // tileObjects.unshift(baseObject);
   var tileGroup = new fabric.Group(tileObjects, {"selectable": false});
   passCanvas.setBackgroundImage(tileGroup);
   // end of tiles
@@ -193,7 +220,7 @@ function initCanvasObjects() {
       var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
 
       var radius = popMap[i][j] * tileSize / 40;
-      popGrid[i][j] = drawCircle(x, y, radius, NEON_PURPLE);
+      popGrid[i][j] = drawCircle(x, y, radius, GREEN);
     }
   }
 
@@ -227,6 +254,11 @@ function initCanvasObjects() {
   var shadeGroup = new fabric.Group(shadeObjects, {"selectable": false});
   shadeCanvas.add(shadeGroup);
   // end of shade
+
+  // tooltip
+  tooltipObject = drawBox(0, 0, tooltipSize, tooltipSize, BLACK, shadeEdgeWidth);
+  tooltipCanvas.add(tooltipObject);
+  // end of tooltip
 
   renderAllCanvases();
 }
