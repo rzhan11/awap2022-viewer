@@ -19,6 +19,7 @@ const RED = "#FF0000";
 const GREEN = "#00FF00";
 const BLUE = "#0000FF";
 const YELLOW = "#FFFF00";
+const NEON_PURPLE = "#00FF00"
 
 var outerPadding = 5;
 var innerPadding = 1;
@@ -28,8 +29,8 @@ var wordOffset = 3;
 var edgeWidth = 5;
 
 var shadeTileSize = tileSize + innerPadding;
-var shadeEdgeWidth = 4;
-var shadeOpacity = 0.5
+var shadeEdgeWidth = 2;
+var shadeOpacity = 1;
 
 var curOverTile = null;
 function getTileFromPointer(x, y) {
@@ -53,8 +54,8 @@ function initCanvas(canvasID) {
     selection: false
   });
 
-  canvas.setWidth(window.innerWidth - 50)
-  canvas.setHeight(window.innerHeight - 50)
+  canvas.setWidth(window.innerWidth)
+  canvas.setHeight(window.innerHeight)
 
   // setup highlighting
   // canvas.on('mouse:move', function(e) {
@@ -127,12 +128,13 @@ function linkCanvasMotion(frontCanvas) {
 
 const passCanvas = initCanvas("pass-canvas");
 const iconCanvas = initCanvas("icon-canvas");
+const shadeCanvas = initCanvas("shade-canvas");
 const popCanvas = initCanvas("pop-canvas");
-var allCanvases = [passCanvas, iconCanvas, popCanvas];
+var allCanvases = [passCanvas, iconCanvas, shadeCanvas, popCanvas];
 linkCanvasMotion(popCanvas);
 
 
-function render() {
+function renderAllCanvases() {
   for (var canvas of allCanvases) {
     canvas.renderAll();
   }
@@ -151,20 +153,23 @@ function initCanvasObjects() {
 
   var canvasSize = 2 * outerPadding + (frameWidth - 1) * innerPadding + frameWidth * tileSize;
 
-  // base image
-  var baseObject = drawRect(canvasSize / 2, canvasSize / 2, canvasSize, canvasSize, DARK_GRAY);
-
   // tiles
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
       var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
       var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
 
-      var grayscale = 256 * (1 - passMap[i][j] / 10);
-      var boxColor = rgb(grayscale, grayscale, grayscale);
-      passGrid[i][j] = drawRect(x, y, tileSize, tileSize, boxColor);
+      var color = getPassColor(passMap[i][j]);
+      passGrid[i][j] = drawRect(x, y, tileSize, tileSize, color);
     }
   }
+
+  var baseObject = drawRect(canvasSize / 2, canvasSize / 2, canvasSize, canvasSize, DARK_GRAY);
+  var tileObjects = passGrid.flat();
+  tileObjects.unshift(baseObject);
+  var tileGroup = new fabric.Group(tileObjects, {"selectable": false});
+  passCanvas.setBackgroundImage(tileGroup);
+  // end of tiles
 
   // icons
   for (var i = 0; i < frameHeight; i++) {
@@ -172,52 +177,58 @@ function initCanvasObjects() {
       var wx = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
       var wy = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
       iconGrid[i][j] = drawText("", wx, wy, 15, BLACK);
+      iconGrid[i][j].set("visible", false);
     }
   }
 
-  // tiles
+  var iconObjects = iconGrid.flat();
+  var iconGroup = new fabric.Group(iconObjects, {"selectable": false});
+  iconCanvas.add(iconGroup);
+  // end of icons
+
+  // population
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
       var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
       var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
 
-      var radius = popMap[i][j] * tileSize / 50;
-      popGrid[i][j] = drawCircle(x, y, radius, GREEN);
+      var radius = popMap[i][j] * tileSize / 40;
+      popGrid[i][j] = drawCircle(x, y, radius, NEON_PURPLE);
     }
   }
+
+  var popObjects = popGrid.flat();
+  var popGroup = new fabric.Group(popObjects, {"selectable": false});
+  popCanvas.add(popGroup);
+  // end of population
+
 
   // shades
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
       var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
       var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
-      shadeGrid[i][j] = drawBox(x, y, shadeTileSize, shadeTileSize, YELLOW, shadeEdgeWidth, 0.0);
+      // shadeGrid[i][j] = new fabric.Rect({
+      //   width: shadeTileSize, height: shadeTileSize,
+      //   left: y, top: x,
+      //   fill: "#000000",
+      //   opacity: shadeOpacity,
+      //   originX: "center",
+      //   originY: "center",
+      //   visible: false,
+      //   objectCaching: false
+      // });
+      shadeGrid[i][j] = drawBox(x, y, shadeTileSize, shadeTileSize, BLACK, shadeEdgeWidth, shadeOpacity);
+      shadeGrid[i][j].set("visible", false);
     }
   }
 
-  // tiles (passability)
-  var tileObjects = passGrid.flat();
-  tileObjects.unshift(baseObject);
-  var tileGroup = new fabric.Group(tileObjects, {"selectable": false});
-  passCanvas.setBackgroundImage(tileGroup);
+  var shadeObjects = shadeGrid.flat();
+  var shadeGroup = new fabric.Group(shadeObjects, {"selectable": false});
+  shadeCanvas.add(shadeGroup);
+  // end of shade
 
-  // icons
-  var iconObjects = iconGrid.flat();
-  var iconGroup = new fabric.Group(iconObjects, {"selectable": false});
-  iconCanvas.add(iconGroup);
-
-  // population
-  var popObjects = popGrid.flat();
-  var popGroup = new fabric.Group(popObjects, {"selectable": false});
-  popCanvas.add(popGroup);
-
-
-
-  // var activeObjects = iconGrid.flat().concat(shadeGrid.flat());
-  // canvas.add(new fabric.Group(activeObjects, { "selectable": false }));
-
-
-  render();
+  renderAllCanvases();
 }
 
 function drawBox(x, y, width, height, color, thickness, opacity=1) {
@@ -226,7 +237,7 @@ function drawBox(x, y, width, height, color, thickness, opacity=1) {
     left: y, top: x,
     stroke: color,
     strokeWidth: thickness,
-    fill: "transparant",
+    fill: "",
     opacity: opacity,
     originX: "center",
     originY: "center",
@@ -283,27 +294,70 @@ function drawInitFrame() {
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
       if (curFrame[i][j] !== null) {
-        var team = curFrame[i][j][0];
-        var struct_id = curFrame[i][j][1];
-        var color;
-        if (team == 0) {
-          color = RED;
-        } else if (team == 1) {
-          color = BLUE;
-        } else if (team == -1) {
-          color = GREEN;
-        }
-        var textSymbol = structID2Name[struct_id][0];
-        iconGrid[i][j].set("fill", color);
-        iconGrid[i][j].set("text", textSymbol);
+        setIcon(i, j, curFrame[i][j]);
       } else {
-        iconGrid[i][j].set("text", "");
+        iconGrid[i][j].set("visible", false);
+        shadeGrid[i][j].set("visible", false)
       }
     }
   }
 
-  render();
+  renderAllCanvases();
   setRoundNum(0);
+}
+
+function getPassColor(passability) {
+  // var colorGrad = [ [0, 255, 255], [255, 255, 255], [255, 165, 0] ];
+  // var colorGrad = [ [255, 255, 255], [255, 165, 0] ];
+  var colorGrad = [ [255, 232, 191], [255, 165, 0] ];
+  var minPass = 1;
+  var maxPass = 10;
+
+  var relPass = (passability - minPass) / (maxPass - minPass);
+  if (relPass <= 0.05) {
+    relPass = 0.05;
+  }
+  if (relPass == 1) {
+    relPass -= 0.00001;
+  }
+
+
+  var colorIndex = Math.floor(relPass * (colorGrad.length - 1));
+  var colorWeight = relPass * (colorGrad.length - 1) - colorIndex;
+
+  var color1 = colorGrad[colorIndex];
+  var color2 = colorGrad[colorIndex + 1];
+
+  var color = [0, 0, 0];
+  for (var i = 0; i < color.length; i++) {
+    color[i] = color1[i] * (1 - colorWeight) + color2[i] * colorWeight;
+  }
+
+  // console.log(colorIndex, colorWeight, color)
+
+  return rgb(color[0], color[1], color[2]);
+}
+
+function setIcon(i, j, unit) {
+  var team = unit[0];
+  var struct_id = unit[1];
+  var color;
+  if (team == 0) {
+    color = RED;
+  } else if (team == 1) {
+    color = BLUE;
+  }
+  var textSymbol = structID2Name[struct_id][0];
+  if (textSymbol == "R") {
+    textSymbol = ".";
+  }
+
+  iconGrid[i][j].set("fill", color);
+  iconGrid[i][j].set("text", textSymbol);
+  iconGrid[i][j].set("visible", true)
+
+  shadeGrid[i][j].set("stroke", color)
+  shadeGrid[i][j].set("visible", true)
 }
 
 var fileInput = document.getElementById("file-input");
@@ -495,22 +549,11 @@ function getNewFrame(targetRound, oldRoundNum) {
       var [x, y, team, st_type] = structure;
       curFrame[x][y] = [team, st_type];
 
-      // make changes to canvas
-      var color;
-      if (team == 0) {
-        color = RED;
-      } else if (team == 1) {
-        color = BLUE;
-      } else if (team == -1) {
-        color = GREEN;
-      }
-      var textSymbol = structID2Name[st_type][0];
-      iconGrid[x][y].set("fill", color);
-      iconGrid[x][y].set("text", textSymbol);
+      setIcon(x, y, curFrame[x][y]);
     }
   }
 
-  render();
+  renderAllCanvases();
 }
 
 function setRoundNum(num) {
