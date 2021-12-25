@@ -37,34 +37,23 @@ var shadeOpacity = 1;
 
 var tooltipSize = fullTileSize;
 
-
-var curOverTile = null;
-function getTileFromPointer(x, y) {
-  // ty, tx are supposed to be in this order
-  // var scale = this.viewportTransform
-  var ty = Math.floor( (x - outerPadding + innerPadding / 2) / (innerPadding + tileSize) );
-  var tx = Math.floor( (y - outerPadding + innerPadding / 2) / (innerPadding + tileSize) );
-  if (0 <= tx && tx < frameWidth && 0 <= ty && ty < frameHeight) {
-    return [tx, ty];
-  }
-  return null;
-}
-
 function updateTooltip(e) {
   var pointer = e.absolutePointer;
 
   var adjust = outerPadding - innerPadding / 2;
+  // order is supposed to be 'swapped'
+  var ty = Math.floor( (pointer.x - adjust) / fullTileSize );
+  var tx = Math.floor( (pointer.y - adjust) / fullTileSize );
 
-  var tx = Math.floor( (pointer.x - adjust) / fullTileSize );
-  var ty = Math.floor( (pointer.y - adjust) / fullTileSize );
-
-  tooltipObject.left = (tx + 0.5) * fullTileSize + adjust;
-  tooltipObject.top = (ty + 0.5) * fullTileSize + adjust;
+  tooltipObject.left = (ty + 0.5) * fullTileSize + adjust;
+  tooltipObject.top = (tx + 0.5) * fullTileSize + adjust;
 
   if (0 <= tx && tx < frameWidth && 0 <= ty && ty < frameHeight) {
     tooltipObject.set("visible", true);
+    displayTooltipInfo(tx, ty);
   } else {
     tooltipObject.set("visible", false);
+    clearTooltipInfo();
   }
 
   frontCanvas.requestRenderAll();
@@ -251,12 +240,13 @@ function initCanvasObjects() {
   }
 
   var shadeObjects = shadeGrid.flat();
-  var shadeGroup = new fabric.Group(shadeObjects, {"selectable": false});
+  var shadeGroup = new fabric.Group(shadeObjects, {selectable: false});
   shadeCanvas.add(shadeGroup);
   // end of shade
 
   // tooltip
   tooltipObject = drawBox(0, 0, tooltipSize, tooltipSize, BLACK, shadeEdgeWidth);
+  tooltipObject.set("selectable", false)
   tooltipCanvas.add(tooltipObject);
   // end of tooltip
 
@@ -634,6 +624,22 @@ function displayGameInfo() {
     gameInfoText.innerHTML = "";
   }
 
+}
+
+var tooltipPosText = document.getElementById("tooltip-pos-text");
+var tooltipPassText = document.getElementById("tooltip-pass-text");
+var tooltipPopText = document.getElementById("tooltip-pop-text");
+
+function displayTooltipInfo(x, y) {
+  tooltipPosText.innerHTML = "Position: (" + [x, y] + ")";
+  tooltipPassText.innerHTML = "Passability: " + passMap[x][y];
+  tooltipPopText.innerHTML = "Population: " + popMap[x][y];
+}
+
+function clearTooltipInfo() {
+  tooltipPosText.innerHTML = "";
+  tooltipPassText.innerHTML = "";
+  tooltipPopText.innerHTML = "";
 }
 
 function decreaseSpeed() {
