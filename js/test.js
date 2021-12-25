@@ -296,6 +296,8 @@ function drawCircle(x, y, radius, color) {
     left: y, top: x,
     radius: radius,
     fill: color,
+    stroke: BLACK,
+    strokeWidth: 1,
     originX: "center",
     originY: "center",
     objectCaching: false
@@ -364,17 +366,16 @@ function getUnitInfo(unit) {
 }
 
 function setIcon(i, j, unit) {
-  var ui = getUnitInfo(unit);
-  var textSymbol = ui.name[0];
+  var textSymbol = unit.name[0];
   if (textSymbol == "R") {
     textSymbol = ".";
   }
 
-  iconGrid[i][j].set("fill", ui.color);
+  iconGrid[i][j].set("fill", unit.color);
   iconGrid[i][j].set("text", textSymbol);
   iconGrid[i][j].set("visible", true)
 
-  shadeGrid[i][j].set("stroke", ui.color)
+  shadeGrid[i][j].set("stroke", unit.color)
   shadeGrid[i][j].set("visible", true)
 }
 
@@ -494,7 +495,7 @@ function loadData(data) {
       if (structureMap[i][j] === null) {
         curFrame[i][j] = null;
       } else {
-        curFrame[i][j] = [structureMap[i][j][2], structureMap[i][j][3]];
+        curFrame[i][j] = getUnitInfo([structureMap[i][j][2], structureMap[i][j][3]]);
       }
     }
   }
@@ -565,7 +566,7 @@ function getNewFrame(targetRound, oldRoundNum) {
   for (var fnum = oldRoundNum; fnum < targetRound; fnum++) {
     for (var structure of frameChanges[fnum]) {
       var [x, y, team, st_type] = structure;
-      curFrame[x][y] = [team, st_type];
+      curFrame[x][y] = getUnitInfo([team, st_type]);
 
       setIcon(x, y, curFrame[x][y]);
     }
@@ -640,9 +641,9 @@ function displayTooltipInfo(x, y) {
     tooltipStructureText.innerHTML += "None"
     tooltipStructureText.style.color = BLACK;
   } else {
-    var ui = getUnitInfo(curFrame[x][y]);
-    tooltipStructureText.innerHTML += ui.name + ", " + ui.team;
-    tooltipStructureText.style.color = ui.color;
+    var unit = curFrame[x][y];
+    tooltipStructureText.innerHTML += unit.name + ", " + unit.team;
+    tooltipStructureText.style.color = unit.color;
   }
 }
 
