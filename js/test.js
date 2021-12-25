@@ -85,7 +85,7 @@ function syncCanvasMotion() {
 
     for (var canvas of allCanvases) {
       canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-      canvas.renderAll();
+      canvas.requestRenderAll();
     }
 
     opt.e.preventDefault();
@@ -123,14 +123,7 @@ function syncCanvasMotion() {
     this.selection = true;
   });
 
-  // enable tooltip
-  // frontCanvas.on('mouse:move', function(opt) {
-  //     this.requestRenderAll();
-  // });
-
-
-
-  // setup highlighting
+  // tooltip
   frontCanvas.on('mouse:move', function(e) {
     if (tooltipObject != null) {
       updateTooltip(e);
@@ -150,9 +143,13 @@ var frontCanvas = tooltipCanvas;
 syncCanvasMotion();
 
 
-function renderAllCanvases() {
+function renderFrame() {
   for (var canvas of allCanvases) {
-    canvas.renderAll();
+    canvas.requestRenderAll();
+  }
+
+  if (curTooltipPos != null) {
+    displayTooltipInfo(curTooltipPos[0], curTooltipPos[1]);
   }
 }
 
@@ -250,7 +247,7 @@ function initCanvasObjects() {
   tooltipCanvas.add(tooltipObject);
   // end of tooltip
 
-  renderAllCanvases();
+  renderFrame();
 }
 
 function drawBox(x, y, width, height, color, thickness, opacity=1) {
@@ -324,7 +321,7 @@ function drawInitFrame() {
     }
   }
 
-  renderAllCanvases();
+  renderFrame();
   setRoundNum(0);
 }
 
@@ -360,25 +357,24 @@ function getPassColor(passability) {
   return rgb(color[0], color[1], color[2]);
 }
 
+var team2Color = {0: RED, 1: BLUE};
+var team2Text = {0: "RED", 1: "BLUE"};
+function getUnitInfo(unit) {
+  return { name: structID2Name[unit[1]], team: team2Text[unit[0]], color: team2Color[unit[0]] }
+}
+
 function setIcon(i, j, unit) {
-  var team = unit[0];
-  var struct_id = unit[1];
-  var color;
-  if (team == 0) {
-    color = RED;
-  } else if (team == 1) {
-    color = BLUE;
-  }
-  var textSymbol = structID2Name[struct_id][0];
+  var ui = getUnitInfo(unit);
+  var textSymbol = ui.name[0];
   if (textSymbol == "R") {
     textSymbol = ".";
   }
 
-  iconGrid[i][j].set("fill", color);
+  iconGrid[i][j].set("fill", ui.color);
   iconGrid[i][j].set("text", textSymbol);
   iconGrid[i][j].set("visible", true)
 
-  shadeGrid[i][j].set("stroke", color)
+  shadeGrid[i][j].set("stroke", ui.color)
   shadeGrid[i][j].set("visible", true)
 }
 
@@ -575,7 +571,7 @@ function getNewFrame(targetRound, oldRoundNum) {
     }
   }
 
-  renderAllCanvases();
+  renderFrame();
 }
 
 function setRoundNum(num) {
@@ -629,17 +625,32 @@ function displayGameInfo() {
 var tooltipPosText = document.getElementById("tooltip-pos-text");
 var tooltipPassText = document.getElementById("tooltip-pass-text");
 var tooltipPopText = document.getElementById("tooltip-pop-text");
+var tooltipStructureText = document.getElementById("tooltip-structure-text");
 
+var curTooltipPos;
 function displayTooltipInfo(x, y) {
+  curTooltipPos = [x, y];
+
   tooltipPosText.innerHTML = "Position: (" + [x, y] + ")";
   tooltipPassText.innerHTML = "Passability: " + passMap[x][y];
   tooltipPopText.innerHTML = "Population: " + popMap[x][y];
+
+  tooltipStructureText.innerHTML = "Structure: ";
+  if (curFrame[x][y] == null) {
+    tooltipStructureText.innerHTML += "None"
+    tooltipStructureText.style.color = BLACK;
+  } else {
+    var ui = getUnitInfo(curFrame[x][y]);
+    tooltipStructureText.innerHTML += ui.name + ", " + ui.team;
+    tooltipStructureText.style.color = ui.color;
+  }
 }
 
 function clearTooltipInfo() {
   tooltipPosText.innerHTML = "";
   tooltipPassText.innerHTML = "";
   tooltipPopText.innerHTML = "";
+  tooltipStructureText.innerHTML = "";
 }
 
 function decreaseSpeed() {
