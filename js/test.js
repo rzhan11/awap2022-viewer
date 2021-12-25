@@ -211,7 +211,7 @@ function initCanvasObjects() {
 
   var popObjects = popGrid.flat();
   var popGroup = new fabric.Group(popObjects, {"selectable": false});
-  popCanvas.add(popGroup);
+  popCanvas.setBackgroundImage(popGroup);
   // end of population
 
 
@@ -228,13 +228,6 @@ function initCanvasObjects() {
   var shadeGroup = new fabric.Group(shadeObjects, {selectable: false});
   shadeCanvas.add(shadeGroup);
   // end of shade
-
-  // tooltip
-  tooltipObject = drawBox(0, 0, tooltipSize, tooltipSize, BLACK, shadeEdgeWidth);
-  tooltipObject.set("selectable", false)
-  tooltipObject.set("visible", false)
-  tooltipCanvas.add(tooltipObject);
-  // end of tooltip
 
   // tower cover
   var towerCoverGrid = [];
@@ -255,8 +248,14 @@ function initCanvasObjects() {
   towerCoverObject = new fabric.Group(towerCoverGrid, {left: 0, top: 0, originX: "center", originY: "center", selectable: false});
   towerCoverObject.set("visible", false);
   tooltipCanvas.add(towerCoverObject);
-
   // end of tower cover
+
+  // tooltip
+  tooltipObject = drawBox(0, 0, tooltipSize, tooltipSize, BLACK, shadeEdgeWidth);
+  tooltipObject.set("selectable", false)
+  tooltipObject.set("visible", false)
+  tooltipCanvas.add(tooltipObject);
+  // end of tooltip
 
   renderFrame();
 }
@@ -547,6 +546,8 @@ var frameRange = document.getElementById("frame-range");
 
 var p1MoneyText = document.getElementById("p1-money-text");
 var p2MoneyText = document.getElementById("p2-money-text");
+var p1UtilityText = document.getElementById("p1-utility-text");
+var p2UtilityText = document.getElementById("p2-utility-text");
 var gameInfoText = document.getElementById("game-info-text");
 
 prevRoundButton.onclick = prevRound;
@@ -618,19 +619,27 @@ function displayGameInfo() {
   p1MoneyText.innerHTML = "Team RED Money: " + moneyHistory[roundNum][0] + "<br>";
   p2MoneyText.style.color = BLUE;
   p2MoneyText.innerHTML = "Team BLUE Money: " + moneyHistory[roundNum][1] + "<br>";
-  if (roundNum == metadata.maxRound) {
-    gameInfoText.innerHTML = "Winner: ";
-    if (winner == "WHITE") {
-      gameInfoText.style.color = BLUE;
-      gameInfoText.innerHTML += metadata.whiteTeamName;
-    } else {
-      gameInfoText.style.color = RED;
-      gameInfoText.innerHTML += metadata.blackTeamName;
-    }
-    gameInfoText.innerHTML += " (" + winner + ")";
-  } else {
-    gameInfoText.innerHTML = "";
-  }
+
+  p1UtilityText.style.color = RED;
+  p1UtilityText.innerHTML = "Team RED Utility: " + utilityHistory[roundNum][0] + "<br>";
+  p2UtilityText.style.color = BLUE;
+  p2UtilityText.innerHTML = "Team BLUE Utility: " + utilityHistory[roundNum][1] + "<br>";
+
+
+  // winner text
+  // if (roundNum == metadata.maxRound) {
+  //   gameInfoText.innerHTML = "Winner: ";
+  //   if (winner == "WHITE") {
+  //     gameInfoText.style.color = BLUE;
+  //     gameInfoText.innerHTML += metadata.whiteTeamName;
+  //   } else {
+  //     gameInfoText.style.color = RED;
+  //     gameInfoText.innerHTML += metadata.blackTeamName;
+  //   }
+  //   gameInfoText.innerHTML += " (" + winner + ")";
+  // } else {
+  //   gameInfoText.innerHTML = "";
+  // }
 
 }
 
