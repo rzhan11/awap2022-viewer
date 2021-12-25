@@ -48,13 +48,7 @@ function updateTooltip(e) {
   tooltipObject.left = (ty + 0.5) * fullTileSize + adjust;
   tooltipObject.top = (tx + 0.5) * fullTileSize + adjust;
 
-  if (0 <= tx && tx < frameWidth && 0 <= ty && ty < frameHeight) {
-    tooltipObject.set("visible", true);
-    displayTooltipInfo(tx, ty);
-  } else {
-    tooltipObject.set("visible", false);
-    clearTooltipInfo();
-  }
+  displayTooltipInfo(tx, ty);
 
   frontCanvas.requestRenderAll();
 }
@@ -158,6 +152,13 @@ var popGrid;
 var iconGrid;
 var shadeGrid;
 var tooltipObject;
+var towerCoverObject;
+
+function tile2Pixels(tx, ty) {
+  var px = outerPadding + tx * innerPadding + (tx + 0.5) * tileSize;
+  var py = outerPadding + ty * innerPadding + (ty + 0.5) * tileSize;
+  return [px, py];
+}
 
 function initCanvasObjects() {
   passGrid = init2DArray(frameWidth, frameHeight);
@@ -187,9 +188,8 @@ function initCanvasObjects() {
   // icons
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
-      var wx = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
-      var wy = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
-      iconGrid[i][j] = drawText("", wx, wy, 15, BLACK);
+      var p = tile2Pixels(i, j);
+      iconGrid[i][j] = drawText("", p[0], p[1], 15, BLACK);
       iconGrid[i][j].set("visible", false);
     }
   }
@@ -202,11 +202,10 @@ function initCanvasObjects() {
   // population
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
-      var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
-      var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
+      var p = tile2Pixels(i, j);
 
       var radius = popMap[i][j] * tileSize / 40;
-      popGrid[i][j] = drawCircle(x, y, radius, GREEN);
+      popGrid[i][j] = drawCircle(p[0], p[1], radius, GREEN);
     }
   }
 
@@ -219,19 +218,8 @@ function initCanvasObjects() {
   // shades
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
-      var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
-      var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
-      // shadeGrid[i][j] = new fabric.Rect({
-      //   width: shadeTileSize, height: shadeTileSize,
-      //   left: y, top: x,
-      //   fill: "#000000",
-      //   opacity: shadeOpacity,
-      //   originX: "center",
-      //   originY: "center",
-      //   visible: false,
-      //   objectCaching: false
-      // });
-      shadeGrid[i][j] = drawBox(x, y, shadeTileSize, shadeTileSize, BLACK, shadeEdgeWidth, shadeOpacity);
+      var p = tile2Pixels(i, j);
+      shadeGrid[i][j] = drawBox(p[0], p[1], shadeTileSize, shadeTileSize, BLACK, shadeEdgeWidth, shadeOpacity);
       shadeGrid[i][j].set("visible", false);
     }
   }
@@ -244,8 +232,31 @@ function initCanvasObjects() {
   // tooltip
   tooltipObject = drawBox(0, 0, tooltipSize, tooltipSize, BLACK, shadeEdgeWidth);
   tooltipObject.set("selectable", false)
+  tooltipObject.set("visible", false)
   tooltipCanvas.add(tooltipObject);
   // end of tooltip
+
+  // tower cover
+  var towerCoverGrid = [];
+  var towerR2 = 25;
+  var maxDiff = Math.floor(Math.sqrt(towerR2));
+  for (var dx = -maxDiff; dx <= maxDiff; dx++) {
+    for (var dy = -maxDiff; dy <= maxDiff; dy++) {
+      var r2 = dx * dx + dy * dy;
+      if (r2 <= towerR2) {
+        var x = dx * fullTileSize;
+        var y = dy * fullTileSize;
+        var rect = drawRect(x, y, fullTileSize, fullTileSize, MEDIUM_GRAY, 0.5);
+        towerCoverGrid.push(rect);
+      }
+    }
+  }
+  // towerCoverObject = new fabric.Group(towerCoverGrid);
+  towerCoverObject = new fabric.Group(towerCoverGrid, {left: 0, top: 0, originX: "center", originY: "center", selectable: false});
+  towerCoverObject.set("visible", false);
+  tooltipCanvas.add(towerCoverObject);
+
+  // end of tower cover
 
   renderFrame();
 }
@@ -630,6 +641,15 @@ var tooltipStructureText = document.getElementById("tooltip-structure-text");
 
 var curTooltipPos;
 function displayTooltipInfo(x, y) {
+  towerCoverObject.set("visible", false);
+
+  if ( !(0 <= x && x < frameWidth && 0 <= y && y < frameHeight) ) {
+    clearTooltipInfo();
+    return;
+  }
+
+  tooltipObject.set("visible", true);
+
   curTooltipPos = [x, y];
 
   tooltipPosText.innerHTML = "Position: (" + [x, y] + ")";
@@ -644,10 +664,27 @@ function displayTooltipInfo(x, y) {
     var unit = curFrame[x][y];
     tooltipStructureText.innerHTML += unit.name + ", " + unit.team;
     tooltipStructureText.style.color = unit.color;
+
+    // display radius for tower
+    if (unit.name == "Tower") {
+      displayTowerRadius(x, y);
+    }
   }
 }
 
+function displayTowerRadius(x, y) {
+  towerCoverObject.set("visible", true);
+
+  var p = tile2Pixels(x, y);
+  towerCoverObject.set("left", p[1]);
+  towerCoverObject.set("top", p[0]);
+}
+
 function clearTooltipInfo() {
+  curTooltipPos = null;
+
+  tooltipObject.set("visible", false);
+
   tooltipPosText.innerHTML = "";
   tooltipPassText.innerHTML = "";
   tooltipPopText.innerHTML = "";
