@@ -418,7 +418,7 @@ var loadedFrames = false;
 var frames = [];
 var frameWidth = -1;
 var frameHeight = -1;
-var numFrames = -1;
+var numFrameChanges = -1;
 
 var winner = "";
 
@@ -474,7 +474,7 @@ function loadData(data) {
 
   // load game frames
 
-  numFrames = obj["metadata"]["num_frames"];
+  numFrameChanges = obj["metadata"]["num_frames"];
   frameWidth = mapData.length;
   frameHeight = mapData[0].length;
 
@@ -514,21 +514,49 @@ function loadData(data) {
   frames.push(baseFrame);
   roundNum = 0;
 
-  console.log("Read " + numFrames + " frames");
+  console.log("Read " + numFrameChanges + " frames");
 
   loadedFrames = true;
-  metadata.maxRound = numFrames - 1;
+  metadata.maxRound = numFrameChanges;
   // set up range slider
   frameRange.max = metadata.maxRound;
   frameRange.oninput = function() {
     setRoundNum(parseInt(this.value))
   }
 
+  // load unit stats
+  calculateUnitStats();
+
   // update screen
   displayMetadata();
   initCanvasObjects();
 
   drawInitFrame();
+}
+
+var unitCounts;
+var unitNames = ["Tower", "Road", "Generator"];
+function calculateUnitStats() {
+
+  unitCounts = [];
+  var curUnitCount = [];
+  for (var i = 0; i < 2; i++) {
+    curUnitCount.push({});
+    for (var unit of unitNames) {
+      curUnitCount[i][unit] = 0;
+    }
+  }
+  unitCounts.push(JSON.parse(JSON.stringify(curUnitCount)));
+
+  for (var fnum = 0; fnum < numFrameChanges; fnum++) {
+    for (var structure of frameChanges[fnum]) {
+      var [x, y, team, st_type] = structure;
+      var unit = getUnitInfo([team, st_type]);
+      curUnitCount[team][unit.name] += 1;
+    }
+    unitCounts.push(JSON.parse(JSON.stringify(curUnitCount)));
+  }
+  // console.log(unitCounts)
 }
 
 var prevRoundButton = document.getElementById("prev-round-button");
@@ -544,10 +572,12 @@ var playButton = document.getElementById("play-button");
 
 var frameRange = document.getElementById("frame-range");
 
-var p1MoneyText = document.getElementById("p1-money-text");
-var p2MoneyText = document.getElementById("p2-money-text");
-var p1UtilityText = document.getElementById("p1-utility-text");
-var p2UtilityText = document.getElementById("p2-utility-text");
+var moneyTexts = [document.getElementById("p1-money-text"), document.getElementById("p2-money-text")];
+var moneyCanvases = [new fabric.Canvas("p1-money-canvas", {selection: false}), new fabric.Canvas("p2-money-canvas", {selection: false})];
+
+
+var utilityTexts = [document.getElementById("p1-utility-text"), document.getElementById("p2-utility-text")];
+var unitTexts = [document.getElementById("p1-unit-text"), document.getElementById("p2-unit-text")];
 var gameInfoText = document.getElementById("game-info-text");
 
 prevRoundButton.onclick = prevRound;
@@ -615,16 +645,22 @@ Updates visual menu box of game stats
 function displayGameInfo() {
 
   // display game info text
-  p1MoneyText.style.color = RED;
-  p1MoneyText.innerHTML = "Team RED Money: " + moneyHistory[roundNum][0] + "<br>";
-  p2MoneyText.style.color = BLUE;
-  p2MoneyText.innerHTML = "Team BLUE Money: " + moneyHistory[roundNum][1] + "<br>";
+  for (var t = 0; t < 2; t++) {
+    moneyTexts[t].style.color = team2Color[t];
+    moneyTexts[t].innerHTML = "Team " + team2Text[t] + " Money: " + moneyHistory[roundNum][t];
 
-  p1UtilityText.style.color = RED;
-  p1UtilityText.innerHTML = "Team RED Utility: " + utilityHistory[roundNum][0] + "<br>";
-  p2UtilityText.style.color = BLUE;
-  p2UtilityText.innerHTML = "Team BLUE Utility: " + utilityHistory[roundNum][1] + "<br>";
+    moneyCanvases[t].clear();
+    var bar = drawRect(0, 0, moneyHistory[roundNum][0]/10, 25, team2Color[t]);
+    bar.originX = "left";
+    bar.originY = "top";
+    moneyCanvases[t].add(bar);
 
+    utilityTexts[t].style.color = team2Color[t];
+    utilityTexts[t].innerHTML = "Team " + team2Text[t] + " Utility: " + utilityHistory[roundNum][t];
+
+    unitTexts[t].style.color = team2Color[t];
+    unitTexts[t].innerHTML = "Team " + team2Text[t] + " Units: " + JSON.stringify(unitCounts[roundNum][t]);
+  }
 
   // winner text
   // if (roundNum == metadata.maxRound) {
