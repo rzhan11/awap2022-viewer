@@ -1,6 +1,5 @@
 "use strict";
 
-
 function updateTooltip(e) {
   var pointer = e.absolutePointer;
 
@@ -508,8 +507,14 @@ function displayGameInfo() {
     moneyTexts[t].style.color = team2Color[t];
     moneyTexts[t].innerHTML = "Team " + team2Text[t] + " Money: " + moneyHistory[roundNum][t];
 
+    // update charts
+    moneyChart.data.datasets[0].data[t] = moneyHistory[roundNum][t]
+    moneyChart.update()
+    utilityChart.data.datasets[0].data[t] = utilityHistory[roundNum][t]
+    utilityChart.update()
+
     moneyCanvases[t].clear();
-    var bar = drawRect(0, 0, moneyHistory[roundNum][0]/10, 25, team2Color[t]);
+    var bar = drawRect(0, 0, moneyHistory[roundNum][t]/10, 25, team2Color[t]);
     bar.originX = "left";
     bar.originY = "top";
     moneyCanvases[t].add(bar);

@@ -114,6 +114,11 @@
 
 				<!-- <div class="row row-content"> -->
 					<div>
+						<div class="row row-content">
+							<div class="col-6"> <canvas id="money-chart" width="300" height="200"></canvas> </div>
+							<div class="col-6"> <canvas id="utility-chart" width="300" height="200"></canvas> </div>
+						</div>
+
 						<div class="money-row">
 							<div class="money-col"><p id="p1-money-text"></p></div>
 							<div class="money-col"><canvas id="p1-money-canvas" width="1000" height="50"></canvas></div>
@@ -146,6 +151,8 @@
 	<script src="../node_modules/jquery/dist/jquery.slim.min.js"></script>
 	<script src="../node_modules/popper.js/dist/umd/popper.min.js"></script>
 	<script src="../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+
 
 	<script src="../js/fabric.js"></script>
 
@@ -153,6 +160,7 @@
 	<script src="../js/helper.js"></script>
 	<script src="../js/draw_helper.js"></script>
 
+	<script src="../js/my-chart.js"></script>
 	<script src="../js/side-panel.js"></script>
 	<script src="../js/viewer.js"></script>
 
