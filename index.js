@@ -26,18 +26,6 @@ app.get('/', function(req, res){
     });
 });
 
-
-app.get('/test', function(req, res){
-    console.log("test anon()");
-    res.render("test", {
-    });
-});
-
-app.get('/bar', function(req, res){
-    console.log("bar anon()");
-    res.render("bar", {
-    });
-});
 // -------------- listener -------------- //
 // The listener is what keeps node 'alive.'
 

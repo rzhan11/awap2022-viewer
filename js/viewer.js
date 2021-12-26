@@ -1,133 +1,306 @@
 "use strict";
 
-$(document).ready(function() {
-  $("#help-modal-button").click(function() {
-    $("#helpModal").modal();
-  });
-});
 
-function rgb(r, g, b){
-  return "rgb("+r+","+g+","+b+")";
+function updateTooltip(e) {
+  var pointer = e.absolutePointer;
+
+  var adjust = outerPadding - innerPadding / 2;
+  // order is supposed to be 'swapped'
+  var ty = Math.floor( (pointer.x - adjust) / fullTileSize );
+  var tx = Math.floor( (pointer.y - adjust) / fullTileSize );
+
+  tooltipObject.left = (ty + 0.5) * fullTileSize + adjust;
+  tooltipObject.top = (tx + 0.5) * fullTileSize + adjust;
+
+  displayTooltipInfo(tx, ty);
+
+  frontCanvas.requestRenderAll();
 }
 
-const WHITE = "#FFFFFF"
-const LIGHT_GRAY = "#CFCFCF"
-const MEDIUM_GRAY = "#9F9F9F"
-const DARK_GRAY = "#7F7F7F"
-const BLACK = "#444444";
-const RED = "#FF0000";
-const GREEN = "#00FF00";
-const BLUE = "#0000FF";
-const YELLOW = "#FFFF00";
+function initCanvas(canvasID) {
+  var canvas = new fabric.Canvas(canvasID, {
+    renderOnAddRemove: false,
+    selection: false
+  });
 
-var outerPadding = 5;
-var innerPadding = 1;
-var squareSize = 15;
-var wordFontSize = 15;
-var wordOffset = 3;
-var edgeWidth = 5;
+  canvas.setWidth(window.innerWidth)
+  canvas.setHeight(window.innerHeight)
 
-const canvas = document.getElementById('map-canvas');
-const context = canvas.getContext('2d');
+  return canvas;
+}
+
+function syncCanvasMotion() {
+  // enable zoom
+  frontCanvas.on('mouse:wheel', function(opt) {
+    var delta = opt.e.deltaY;
+    var zoom = this.getZoom();
+    zoom *= 0.999 ** delta;
+    if (zoom > maxZoom) zoom = maxZoom;
+    if (zoom < minZoom) zoom = minZoom;
+
+    for (var canvas of allCanvases) {
+      canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+      canvas.requestRenderAll();
+    }
+
+    opt.e.preventDefault();
+    opt.e.stopPropagation();
+  });
+
+  // enable pan
+  frontCanvas.on('mouse:down', function(opt) {
+    var evt = opt.e;
+    this.isDragging = true;
+    this.selection = false;
+    this.lastPosX = evt.clientX;
+    this.lastPosY = evt.clientY;
+  });
+  frontCanvas.on('mouse:move', function(opt) {
+    if (this.isDragging) {
+      var e = opt.e;
+      for (var canvas of allCanvases) {
+        var vpt = canvas.viewportTransform;
+        vpt[4] += e.clientX - this.lastPosX;
+        vpt[5] += e.clientY - this.lastPosY;
+        canvas.requestRenderAll();
+      }
+      this.lastPosX = e.clientX;
+      this.lastPosY = e.clientY;
+    }
+  });
+  frontCanvas.on('mouse:up', function(opt) {
+    // on mouse up we want to recalculate new interaction
+    // for all objects, so we call setViewportTransform
+    for (var canvas of allCanvases) {
+      canvas.setViewportTransform(canvas.viewportTransform);
+    }
+    this.isDragging = false;
+    this.selection = true;
+  });
+
+  // tooltip
+  frontCanvas.on('mouse:move', function(e) {
+    if (tooltipObject != null) {
+      updateTooltip(e);
+    }
+  });
+}
+
+const passCanvas = initCanvas("pass-canvas");
+const iconCanvas = initCanvas("icon-canvas");
+const shadeCanvas = initCanvas("shade-canvas");
+const popCanvas = initCanvas("pop-canvas");
+const tooltipCanvas = initCanvas("tooltip-canvas");
+
+var allCanvases = [passCanvas, iconCanvas, shadeCanvas, popCanvas, tooltipCanvas];
+var frontCanvas = tooltipCanvas;
+
+syncCanvasMotion();
 
 
-function drawFrame() {
-  canvas.width = 2 * outerPadding + (frameWidth - 1) * innerPadding + frameWidth * squareSize;
-  canvas.height = 2 * outerPadding + (frameHeight - 1) * innerPadding + frameHeight * squareSize;
+function renderFrame() {
+  for (var canvas of allCanvases) {
+    canvas.requestRenderAll();
+  }
 
-  // background
-  context.beginPath();
-  context.rect(0, 0, canvas.width, canvas.height);
-  context.closePath();
-  context.fillStyle = DARK_GRAY;
-  context.fill();
+  if (curTooltipPos != null) {
+    displayTooltipInfo(curTooltipPos[0], curTooltipPos[1]);
+  }
+}
 
-  // font settings
-  context.font = wordFontSize + "pt sans-serif";
-  context.fillStyle = BLACK;
-  context.textAlign = "center";
-  context.textBaseline = 'middle';
+var passGrid;
+var popGrid;
+var iconGrid;
+var shadeGrid;
+var tooltipObject;
+var towerCoverObject;
 
+function tile2Pixels(tx, ty) {
+  var px = outerPadding + tx * innerPadding + (tx + 0.5) * tileSize;
+  var py = outerPadding + ty * innerPadding + (ty + 0.5) * tileSize;
+  return [px, py];
+}
+
+function initCanvasObjects() {
+  passGrid = init2DArray(frameWidth, frameHeight);
+  popGrid = init2DArray(frameWidth, frameHeight);
+  iconGrid = init2DArray(frameWidth, frameHeight);
+  shadeGrid = init2DArray(frameWidth, frameHeight);
+
+
+  // tiles
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
-      var x = outerPadding + i * innerPadding + i * squareSize;
-      var y = outerPadding + j * innerPadding + j * squareSize;
-      context.beginPath();
-      context.rect(y, x, squareSize, squareSize);
-      context.closePath();
+      var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
+      var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
 
-      var grayscale = 256 * (1 - popMap[i][j] / 100);
-      context.fillStyle = rgb(grayscale, grayscale, grayscale);
-      context.fill();
+      var color = getPassColor(passMap[i][j]);
+      passGrid[i][j] = drawRect(x, y, tileSize, tileSize, color);
     }
   }
+
+  var mapPixelSize = 2 * outerPadding + (frameWidth - 1) * innerPadding + frameWidth * tileSize;
+  var baseObject = drawRect(mapPixelSize / 2, mapPixelSize / 2, mapPixelSize, mapPixelSize, DARK_GRAY);
+  var tileObjects = passGrid.flat();
+  // tileObjects.unshift(baseObject);
+  var tileGroup = new fabric.Group(tileObjects, {"selectable": false});
+  passCanvas.setBackgroundImage(tileGroup);
+  // end of tiles
+
+  // icons
+  for (var i = 0; i < frameHeight; i++) {
+    for (var j = 0; j < frameWidth; j++) {
+      var p = tile2Pixels(i, j);
+      iconGrid[i][j] = drawText("", p[0], p[1], 15, BLACK);
+      iconGrid[i][j].set("visible", false);
+    }
+  }
+
+  var iconObjects = iconGrid.flat();
+  var iconGroup = new fabric.Group(iconObjects, {"selectable": false});
+  iconCanvas.add(iconGroup);
+  // end of icons
+
+  // population
+  for (var i = 0; i < frameHeight; i++) {
+    for (var j = 0; j < frameWidth; j++) {
+      var p = tile2Pixels(i, j);
+
+      var radius = popMap[i][j] * tileSize / 40;
+      popGrid[i][j] = drawCircle(p[0], p[1], radius, GREEN);
+    }
+  }
+
+  var popObjects = popGrid.flat();
+  var popGroup = new fabric.Group(popObjects, {"selectable": false});
+  popCanvas.setBackgroundImage(popGroup);
+  // end of population
+
+
+  // shades
+  for (var i = 0; i < frameHeight; i++) {
+    for (var j = 0; j < frameWidth; j++) {
+      var p = tile2Pixels(i, j);
+      shadeGrid[i][j] = drawBox(p[0], p[1], shadeTileSize, shadeTileSize, BLACK, shadeEdgeWidth, shadeOpacity);
+      shadeGrid[i][j].set("visible", false);
+    }
+  }
+
+  var shadeObjects = shadeGrid.flat();
+  var shadeGroup = new fabric.Group(shadeObjects, {selectable: false});
+  shadeCanvas.add(shadeGroup);
+  // end of shade
+
+  // tower cover
+  var towerCoverGrid = [];
+  var towerR2 = 25;
+  var maxDiff = Math.floor(Math.sqrt(towerR2));
+  for (var dx = -maxDiff; dx <= maxDiff; dx++) {
+    for (var dy = -maxDiff; dy <= maxDiff; dy++) {
+      var r2 = dx * dx + dy * dy;
+      if (r2 <= towerR2) {
+        var x = dx * fullTileSize;
+        var y = dy * fullTileSize;
+        var rect = drawRect(x, y, fullTileSize, fullTileSize, MEDIUM_GRAY, 0.5);
+        towerCoverGrid.push(rect);
+      }
+    }
+  }
+  // towerCoverObject = new fabric.Group(towerCoverGrid);
+  towerCoverObject = new fabric.Group(towerCoverGrid, {left: 0, top: 0, originX: "center", originY: "center", selectable: false});
+  towerCoverObject.set("visible", false);
+  tooltipCanvas.add(towerCoverObject);
+  // end of tower cover
+
+  // tooltip
+  tooltipObject = drawBox(0, 0, tooltipSize, tooltipSize, BLACK, shadeEdgeWidth);
+  tooltipObject.set("selectable", false)
+  tooltipObject.set("visible", false)
+  tooltipCanvas.add(tooltipObject);
+  // end of tooltip
+
+  renderFrame();
+}
+
+
+function drawInitFrame() {
+  console.log("draw init frame")
+
+  roundNum = 0;
+  curFrame = JSON.parse(JSON.stringify(baseFrame));
 
   // iterate through each tile and add icon/symbol for units
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
       if (curFrame[i][j] !== null) {
-        var wx = wordOffset + outerPadding + i * innerPadding + (i + 0.5) * squareSize;
-        var wy = outerPadding + j * innerPadding + (j + 0.5) * squareSize;
-        var team = curFrame[i][j][0];
-        var struct_id = curFrame[i][j][1];
-
-        if (team == 0) {
-          context.fillStyle = RED;
-        } else if (team == 1) {
-          context.fillStyle = BLUE;
-        } else if (team == -1) {
-          context.fillStyle = GREEN;
-        }
-        var textSymbol = "U";
-        textSymbol = structID2Name[struct_id][0];
-        context.fillText(textSymbol, wy, wx);
+        setIcon(i, j, curFrame[i][j]);
+      } else {
+        iconGrid[i][j].set("visible", false);
+        shadeGrid[i][j].set("visible", false)
       }
     }
   }
+
+  renderFrame();
+  setRoundNum(0);
 }
 
-function drawEdge (start, end) {
-  var start_x = outerPadding + start[0] * innerPadding + (start[0] + 0.5) * squareSize;
-  var start_y = outerPadding + start[1] * innerPadding + (start[1] + 0.5) * squareSize;
-  var end_x = outerPadding + end[0] * innerPadding + (end[0] + 0.5) * squareSize;
-  var end_y = outerPadding + end[1] * innerPadding + (end[1] + 0.5) * squareSize;
-  var dx = end[0] - start[0];
-  var dy = end[1] - start[1];
-  var magnitude = Math.sqrt(dx * dx + dy * dy);
-  var x_offset = -dy / magnitude * edgeWidth / 2;
-  var y_offset = dx / magnitude * edgeWidth / 2;
+function getPassColor(passability) {
+  var relPass = (passability - minPass) / (maxPass - minPass);
+  if (relPass <= 0.05) {
+    relPass = 0.05;
+  }
+  if (relPass == 1) {
+    relPass -= 0.00001;
+  }
 
 
-  context.beginPath();
-  context.moveTo(start_y + y_offset, start_x + x_offset);
-  context.lineTo(start_y - y_offset, start_x - x_offset);
-  context.lineTo(end_y - y_offset, end_x - x_offset);
-  context.lineTo(end_y + y_offset, end_x + x_offset);
-  context.lineTo(start_y + y_offset, start_x + x_offset);
-  context.closePath();
+  var colorIndex = Math.floor(relPass * (colorGrad.length - 1));
+  var colorWeight = relPass * (colorGrad.length - 1) - colorIndex;
 
-  context.fill();
+  var color1 = colorGrad[colorIndex];
+  var color2 = colorGrad[colorIndex + 1];
+
+  var color = [0, 0, 0];
+  for (var i = 0; i < color.length; i++) {
+    color[i] = color1[i] * (1 - colorWeight) + color2[i] * colorWeight;
+  }
+
+  // console.log(colorIndex, colorWeight, color)
+
+  return rgb(color[0], color[1], color[2]);
 }
 
-var fileInput = document.getElementById("file-input");
-fileInput.addEventListener("change", uploadReplay, false);
+function getUnitInfo(team_id, struct_id) {
+  return { name: structID2Name[struct_id], team: team2Text[team_id], color: team2Color[team_id] }
+}
+
+function setIcon(i, j, unit) {
+  var textSymbol = unit.name[0];
+  if (textSymbol == "R") {
+    textSymbol = ".";
+  }
+
+  iconGrid[i][j].set("fill", unit.color);
+  iconGrid[i][j].set("text", textSymbol);
+  iconGrid[i][j].set("visible", true)
+
+  shadeGrid[i][j].set("stroke", unit.color)
+  shadeGrid[i][j].set("visible", true)
+}
 
 // base data from
+var baseFrame = null;
 var frameChanges = null;
+
 var popMap = null;
+var passMap = null;
 var structureMap = null;
+
 var moneyHistory = null;
 var utilityHistory = null;
-var baseFrame = null;
 
-var metadataText = document.getElementById("metadata-text");
 var metadata = {};
-
-function displayMetadata() {
-  metadataText.innerHTML = "Team RED: " + metadata.p1_name + "<br>";
-  metadataText.innerHTML += "Team BLUE: " + metadata.p2_name + "<br>";
-  metadataText.innerHTML += "Version: " + metadata.version;
-};
 
 var structName2ID = {};
 var structID2Name = {};
@@ -135,19 +308,14 @@ var loadedFrames = false;
 var frames = [];
 var frameWidth = -1;
 var frameHeight = -1;
-var numFrames = -1;
+var numFrameChanges = -1;
 
 var winner = "";
 
 var roundNum = 0;
 var curFrame;
 
-var frameSpeed = 8;
-var minFrameSpeed = 1;
-var maxFrameSpeed = 64;
-var framePlaying = false;
-var drawMoveTrace = true;
-
+fileInput.addEventListener("change", uploadReplay, false);
 function uploadReplay(event) {
   if (event.target.files.length > 0) {
     var reader = new FileReader();
@@ -159,15 +327,6 @@ function uploadReplay(event) {
   }
 }
 
-function init2DArray(width, height) {
-  var arr = new Array(width);
-  for (var i = 0; i < width; i++) {
-    arr[i] = new Array(height);
-    arr[i].fill(null);
-  }
-  return arr;
-}
-
 function loadData(data) {
   console.log("Loading data...")
 
@@ -176,7 +335,6 @@ function loadData(data) {
 
   metadata = obj["metadata"];
 
-  var mapData = obj["map"];
   frameChanges = obj["frame_changes"];
 
   moneyHistory = obj["money_history"];
@@ -187,36 +345,43 @@ function loadData(data) {
   for (var vals of obj["structure_type_ids"]) {
     structID2Name[vals[0]] = vals[1];
     structName2ID[vals[1]] = vals[0];
+    unitNames.push(vals[1]);
   }
 
   // load game frames
+  numFrameChanges = metadata["num_frames"];
 
-  numFrames = obj["metadata"]["num_frames"];
+
+  var mapData = obj["map"];
   frameWidth = mapData.length;
   frameHeight = mapData[0].length;
+
+  passMap = init2DArray(frameWidth, frameHeight);
+  for (var i = 0; i < frameWidth; i++) {
+    for (var j = 0; j < frameHeight; j++) {
+      passMap[i][j] = mapData[i][j][0];
+    }
+  }
 
   popMap = init2DArray(frameWidth, frameHeight);
   for (var i = 0; i < frameWidth; i++) {
     for (var j = 0; j < frameHeight; j++) {
-      popMap[i][j] = mapData[i][j][0];
+      popMap[i][j] = mapData[i][j][1];
     }
   }
 
   structureMap = init2DArray(frameWidth, frameHeight);
   for (var i = 0; i < frameWidth; i++) {
     for (var j = 0; j < frameHeight; j++) {
-      structureMap[i][j] = mapData[i][j][1];
+      structureMap[i][j] = mapData[i][j][2];
     }
   }
 
+  var generatorData = obj["generators"];
   curFrame = init2DArray(frameWidth, frameHeight);
-  for (var i = 0; i < frameWidth; i++) {
-    for (var j = 0; j < frameHeight; j++) {
-      if (structureMap[i][j] === null) {
-        curFrame[i][j] = null;
-      } else {
-        curFrame[i][j] = [structureMap[i][j][2], structureMap[i][j][3]];
-      }
+  for (var t = 0; t < generatorData.length; t++) {
+    for (var el of generatorData[t]) {
+      curFrame[el[0]][el[1]] = getUnitInfo(t, structName2ID["Generator"]);
     }
   }
 
@@ -224,37 +389,55 @@ function loadData(data) {
   frames.push(baseFrame);
   roundNum = 0;
 
-  console.log("Read " + numFrames + " frames");
+  console.log("Read " + numFrameChanges + " frames");
 
   loadedFrames = true;
-  metadata.maxRound = numFrames - 1;
+  metadata.maxRound = numFrameChanges;
   // set up range slider
   frameRange.max = metadata.maxRound;
   frameRange.oninput = function() {
     setRoundNum(parseInt(this.value))
   }
 
+  // load unit stats
+  calculateUnitStats();
+
   // update screen
   displayMetadata();
-  setRoundNum(0);
+  initCanvasObjects();
+
+  drawInitFrame();
 }
 
-var prevRoundButton = document.getElementById("prev-round-button");
-var nextRoundButton = document.getElementById("next-round-button");
-var roundText = document.getElementById("round-text");
+var unitCounts;
+var unitNames = [];
+function calculateUnitStats() {
+  unitCounts = [];
+  var curUnitCount = [];
+  for (var i = 0; i < 2; i++) {
+    curUnitCount.push({});
+    for (var unit of unitNames) {
+      curUnitCount[i][unit] = 0;
+    }
+  }
+  unitCounts.push(JSON.parse(JSON.stringify(curUnitCount)));
 
-var slowerSpeedButton = document.getElementById("slower-speed-button");
-var fasterSpeedButton = document.getElementById("faster-speed-button");
-var speedText = document.getElementById("speed-text");
-speedText.innerHTML = frameSpeed;
+  for (var fnum = 0; fnum < numFrameChanges; fnum++) {
+    for (var structure of frameChanges[fnum]) {
+      var [x, y, team, st_type] = structure;
+      var unit = getUnitInfo(team, st_type);
+      curUnitCount[team][unit.name] += 1;
+    }
+    unitCounts.push(JSON.parse(JSON.stringify(curUnitCount)));
+  }
+  // console.log(unitCounts)
+}
 
-var playButton = document.getElementById("play-button");
-
-var frameRange = document.getElementById("frame-range");
-
-var p1MoneyText = document.getElementById("p1-money-text");
-var p2MoneyText = document.getElementById("p2-money-text");
-var gameInfoText = document.getElementById("game-info-text");
+function displayMetadata() {
+  metadataText.innerHTML = "Team RED: " + metadata.p1_name + "<br>";
+  metadataText.innerHTML += "Team BLUE: " + metadata.p2_name + "<br>";
+  metadataText.innerHTML += "Version: " + metadata.version;
+};
 
 prevRoundButton.onclick = prevRound;
 nextRoundButton.onclick = nextRound;
@@ -268,7 +451,6 @@ function prevRound() {
   if (loadedFrames) {
     if (roundNum > 0) {
       setRoundNum(roundNum - 1);
-      frameRange.value = roundNum - 1
     }
   }
 }
@@ -277,7 +459,6 @@ function nextRound() {
   if (loadedFrames) {
     if (roundNum < metadata.maxRound) {
       setRoundNum(roundNum + 1);
-      frameRange.value = roundNum + 1
     }
   }
 }
@@ -286,29 +467,31 @@ function getNewFrame(targetRound, oldRoundNum) {
   for (var fnum = oldRoundNum; fnum < targetRound; fnum++) {
     for (var structure of frameChanges[fnum]) {
       var [x, y, team, st_type] = structure;
-      curFrame[x][y] = [team, st_type];
+      curFrame[x][y] = getUnitInfo(team, st_type);
+
+      setIcon(x, y, curFrame[x][y]);
     }
   }
 
+  renderFrame();
 }
 
 function setRoundNum(num) {
 
   // reset curFrame if we are going backwards
   if (roundNum > num) {
-    roundNum = 0;
-    curFrame = JSON.parse(JSON.stringify(baseFrame));
+    drawInitFrame();
   }
 
   var oldRoundNum = roundNum;
   roundNum = num;
   roundText.innerHTML = roundNum + " / " + metadata.maxRound;
+  frameRange.value = roundNum;
 
 
   // calculate frame
   getNewFrame(roundNum, oldRoundNum);
 
-  drawFrame();
   displayMetadata();
 
   displayGameInfo();
@@ -321,24 +504,75 @@ Updates visual menu box of game stats
 function displayGameInfo() {
 
   // display game info text
-  p1MoneyText.style.color = BLUE;
-  p1MoneyText.innerHTML = "Player 1 Money: " + moneyHistory[roundNum][0] + "<br>";
-  p2MoneyText.style.color = RED;
-  p2MoneyText.innerHTML = "Player 2 Money: " + moneyHistory[roundNum][1] + "<br>";
-  if (roundNum == metadata.maxRound) {
-    gameInfoText.innerHTML = "Winner: ";
-    if (winner == "WHITE") {
-      gameInfoText.style.color = BLUE;
-      gameInfoText.innerHTML += metadata.whiteTeamName;
-    } else {
-      gameInfoText.style.color = RED;
-      gameInfoText.innerHTML += metadata.blackTeamName;
-    }
-    gameInfoText.innerHTML += " (" + winner + ")";
-  } else {
-    gameInfoText.innerHTML = "";
+  for (var t = 0; t < 2; t++) {
+    moneyTexts[t].style.color = team2Color[t];
+    moneyTexts[t].innerHTML = "Team " + team2Text[t] + " Money: " + moneyHistory[roundNum][t];
+
+    moneyCanvases[t].clear();
+    var bar = drawRect(0, 0, moneyHistory[roundNum][0]/10, 25, team2Color[t]);
+    bar.originX = "left";
+    bar.originY = "top";
+    moneyCanvases[t].add(bar);
+
+    utilityTexts[t].style.color = team2Color[t];
+    utilityTexts[t].innerHTML = "Team " + team2Text[t] + " Utility: " + utilityHistory[roundNum][t];
+
+    unitTexts[t].style.color = team2Color[t];
+    unitTexts[t].innerHTML = "Team " + team2Text[t] + " Units: " + JSON.stringify(unitCounts[roundNum][t]);
   }
 
+}
+
+var curTooltipPos;
+function displayTooltipInfo(x, y) {
+  towerCoverObject.set("visible", false);
+
+  if ( !(0 <= x && x < frameWidth && 0 <= y && y < frameHeight) ) {
+    clearTooltipInfo();
+    return;
+  }
+
+  tooltipObject.set("visible", true);
+
+  curTooltipPos = [x, y];
+
+  tooltipPosText.innerHTML = "Position: (" + [x, y] + ")";
+  tooltipPassText.innerHTML = "Passability: " + passMap[x][y];
+  tooltipPopText.innerHTML = "Population: " + popMap[x][y];
+
+  tooltipStructureText.innerHTML = "Structure: ";
+  if (curFrame[x][y] == null) {
+    tooltipStructureText.innerHTML += "None"
+    tooltipStructureText.style.color = BLACK;
+  } else {
+    var unit = curFrame[x][y];
+    tooltipStructureText.innerHTML += unit.name + ", " + unit.team;
+    tooltipStructureText.style.color = unit.color;
+
+    // display radius for tower
+    if (unit.name == "Tower") {
+      displayTowerRadius(x, y);
+    }
+  }
+}
+
+function displayTowerRadius(x, y) {
+  towerCoverObject.set("visible", true);
+
+  var p = tile2Pixels(x, y);
+  towerCoverObject.set("left", p[1]);
+  towerCoverObject.set("top", p[0]);
+}
+
+function clearTooltipInfo() {
+  curTooltipPos = null;
+
+  tooltipObject.set("visible", false);
+
+  tooltipPosText.innerHTML = "";
+  tooltipPassText.innerHTML = "";
+  tooltipPopText.innerHTML = "";
+  tooltipStructureText.innerHTML = "";
 }
 
 function decreaseSpeed() {
@@ -366,7 +600,7 @@ function changePlay() {
   }
 }
 
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keyup', (e) => {
   if (e.code === "ArrowLeft" || e.key == "a") {
     if (framePlaying) {
       changePlay();
