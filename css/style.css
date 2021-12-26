@@ -14,3 +14,20 @@ input[type="file"] {
     z-index: 10;
     height: 100vh;
 }
+
+.money {
+    overflow: hidden;
+    width: 100%;
+}
+
+.money-col {
+  float: left;
+  width: 45%;
+}
+
+/* Clear floats after the columns */
+.money-row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
