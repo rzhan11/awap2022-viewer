@@ -16,14 +16,28 @@ function updateTooltip(e) {
   frontCanvas.requestRenderAll();
 }
 
+function getCanvasDim(canvasID) {
+  var w = document.getElementById(canvasID).parentElement.parentElement.clientWidth;
+  var h = document.getElementById(canvasID).parentElement.parentElement.clientHeight;
+  return [w, h];
+}
+
 function initCanvas(canvasID) {
   var canvas = new fabric.Canvas(canvasID, {
     renderOnAddRemove: false,
     selection: false
   });
 
-  canvas.setWidth(window.innerWidth)
-  canvas.setHeight(window.innerHeight)
+  // canvas.setWidth(w)
+  var dim = getCanvasDim(canvasID);
+  canvas.setWidth(dim[0])
+  canvas.setHeight(dim[1])
+  window.addEventListener('resize', () => {
+    var dim = getCanvasDim(canvasID);
+    canvas.setWidth(dim[0])
+    canvas.setHeight(dim[1])
+    canvas.requestRenderAll();
+  })
 
   return canvas;
 }
@@ -41,7 +55,6 @@ function syncCanvasMotion() {
       canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
       canvas.requestRenderAll();
     }
-
     opt.e.preventDefault();
     opt.e.stopPropagation();
   });
@@ -219,11 +232,23 @@ function initCanvasObjects() {
   // end of tower cover
 
   // tooltip
-  tooltipObject = drawBox(0, 0, tooltipSize, tooltipSize, BLACK, shadeEdgeWidth);
+  tooltipObject = drawBox(0, 0, tooltipSize, tooltipSize, BLACK, tooltipEdgeWidth);
   tooltipObject.set("selectable", false)
   tooltipObject.set("visible", false)
   tooltipCanvas.add(tooltipObject);
   // end of tooltip
+
+  // set initial pan/zoom
+  for (var canvas of allCanvases) {
+    var vpt = canvas.viewportTransform;
+    // initial pan
+    vpt[4] = canvas.width / 2 - mapPixelSize / 2;
+    vpt[5] = canvas.height / 2 - mapPixelSize / 2;
+    // initial zoom
+    var initZoom = Math.min(canvas.width, canvas.height) / mapPixelSize * 0.95;
+    canvas.zoomToPoint({ x: canvas.width / 2, y: canvas.height / 2 }, initZoom);
+    canvas.requestRenderAll();
+  }
 
   renderFrame();
 }
@@ -327,6 +352,7 @@ function uploadReplay(event) {
     reader.onload = function(event) {
       // do stuff here
       loadData(event.target.result);
+      fileInput.value = null;
     }
     reader.readAsText(event.target.files[0]);
   }

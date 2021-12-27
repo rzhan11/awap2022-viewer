@@ -27,6 +27,8 @@ var shadeOpacity = 1;
 
 // tooltip pixel constants
 var tooltipSize = fullTileSize;
+var tooltipEdgeWidth = 3;
+
 
 // canvas constants
 var maxZoom = 5;
