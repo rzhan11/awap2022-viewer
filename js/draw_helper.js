@@ -1,4 +1,3 @@
-
 function drawBox(x, y, width, height, color, thickness, opacity=1) {
   var obj = new fabric.Rect({
     width: width, height: height,

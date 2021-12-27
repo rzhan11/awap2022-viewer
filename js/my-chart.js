@@ -7,7 +7,7 @@ const moneyCtx = document.getElementById('money-chart').getContext('2d');
 const moneyChart = new Chart(moneyCtx, {
   type: 'bar',
   data: {
-    labels: ['', ''],
+    labels: ['', ''], 
     datasets: [{
         label: 'Money',
         data: [0, 0],

@@ -149,7 +149,7 @@ function initCanvasObjects() {
   // tiles
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
-      var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
+      var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize - 0.5;
       var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
 
       var color = getPassColor(passMap[i][j]);
@@ -553,6 +553,8 @@ function displayGameInfo() {
     unitDivs[t].innerHTML = "";
     unitDivs[t].style.color = team2Color[t];
     for (var unit in unitCounts[roundNum][t]) {
+      console.log(unit);
+      console.log(unitCounts[roundNum][t]);
       var count = unitCounts[roundNum][t][unit];
       unitDivs[t].innerHTML += `
       <div class="col" align="center">
