@@ -10,7 +10,7 @@ input[type="file"] {
 
 .side-panel {
     padding-top: 40px;
-    background-color: white;
+    background-color: rgb(200, 200, 200);
     z-index: 10;
     height: 100vh;
 }
@@ -30,4 +30,10 @@ input[type="file"] {
   content: "";
   display: table;
   clear: both;
+}
+
+.game-info {
+  padding: 10px;
+  margin: 10px;
+  background-color: white;
 }

@@ -109,40 +109,42 @@
 				<!-- </div> -->
 
 				<!-- <div class="row row-content"> -->
-					<p id="metadata-text"></p>
 				<!-- </div> -->
 
-				<!-- <div class="row row-content"> -->
-					<div>
 						<div class="row row-content">
-							<div class="col-6"> <canvas id="money-chart" width="300" height="200"></canvas> </div>
-							<div class="col-6"> <canvas id="utility-chart" width="300" height="200"></canvas> </div>
+							<div class="col-6">
+								<div class="game-info"> <canvas id="money-chart" width="300" height="200"></canvas> </div>
+							</div>
+							<div class="col-6">
+								<div class="game-info"> <canvas id="utility-chart" width="300" height="200"></canvas> </div>
+							</div>
+						</div>
+						<div class="row row-content">
+							<div class="col">
+								<div class="game-info">
+								<p> Position: <span id="tooltip-pos-text"></span> </p>
+								<p> Passability: <span id="tooltip-pass-text"></span> </p>
+								<p> Population: <span id="tooltip-pop-text"></span> </p>
+								<p> Structure: <span id="tooltip-struct-text"></span> </p>
+								</div>
+							</div>
+
+							<div class="col">
+								<div class="game-info">
+									<div class="row" id="p1-unit-div"> </div>
+									<div class="row" id="p2-unit-div"> </div>
+								</div>
+							</div>
+
 						</div>
 
-						<div class="money-row">
-							<div class="money-col"><p id="p1-money-text"></p></div>
-							<div class="money-col"><canvas id="p1-money-canvas" width="1000" height="50"></canvas></div>
+						<div class="row row-content">
+							<div class="col">
+								<div class="game-info">
+									<p id="metadata-text"></p>
+								</div>
+							</div>
 						</div>
-						<div class="money-row">
-							<div class="money-col"><p id="p2-money-text"></p></div>
-							<div class="money-col"><canvas id="p2-money-canvas" width="1000" height="50"></canvas></div>
-						</div>
-						<p id="p1-utility-text"></p>
-						<p id="p2-utility-text"></p>
-						<p id="p1-unit-text"></p>
-						<p id="p2-unit-text"></p>
-						<p id="game-info-text"></p>
-					</div>
-				<!-- </div> -->
-
-					<div>
-						<p> Info: </p>
-						<p id="tooltip-pos-text"></p>
-						<p id="tooltip-pass-text"></p>
-						<p id="tooltip-pop-text"></p>
-						<p id="tooltip-structure-text"></p>
-					</div>
-
 				<br>
 			</div>
 		</div>
@@ -152,6 +154,8 @@
 	<script src="../node_modules/popper.js/dist/umd/popper.min.js"></script>
 	<script src="../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
 
 
 	<script src="../js/fabric.js"></script>

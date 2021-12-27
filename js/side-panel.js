@@ -29,16 +29,12 @@ var playButton = document.getElementById("play-button");
 
 var frameRange = document.getElementById("frame-range");
 
-// game state display elements
-var moneyTexts = [document.getElementById("p1-money-text"), document.getElementById("p2-money-text")];
-var moneyCanvases = [new fabric.Canvas("p1-money-canvas", {selection: false}), new fabric.Canvas("p2-money-canvas", {selection: false})];
-var utilityTexts = [document.getElementById("p1-utility-text"), document.getElementById("p2-utility-text")];
-var unitTexts = [document.getElementById("p1-unit-text"), document.getElementById("p2-unit-text")];
-var gameInfoText = document.getElementById("game-info-text");
+var unitDivs = [document.getElementById("p1-unit-div"), document.getElementById("p2-unit-div")];
+// var gameInfoText = document.getElementById("game-info-text");
 
 
 // tooltip elements
 var tooltipPosText = document.getElementById("tooltip-pos-text");
 var tooltipPassText = document.getElementById("tooltip-pass-text");
 var tooltipPopText = document.getElementById("tooltip-pop-text");
-var tooltipStructureText = document.getElementById("tooltip-structure-text");
+var tooltipStructText = document.getElementById("tooltip-struct-text");

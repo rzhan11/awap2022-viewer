@@ -1,9 +1,13 @@
+Chart.register(ChartDataLabels);
+Chart.defaults.set('plugins.datalabels', {
+  color: 'black'
+});
 
 const moneyCtx = document.getElementById('money-chart').getContext('2d');
 const moneyChart = new Chart(moneyCtx, {
     type: 'bar',
     data: {
-        labels: ['Red', 'Blue'],
+        labels: ['', ''],
         datasets: [{
             label: 'Money',
             data: [0, 0],
@@ -32,7 +36,7 @@ const utilityCtx = document.getElementById('utility-chart').getContext('2d');
 const utilityChart = new Chart(utilityCtx, {
     type: 'bar',
     data: {
-        labels: ['Red', 'Blue'],
+        labels: ['', ''],
         datasets: [{
             label: 'Utility',
             data: [0, 0],

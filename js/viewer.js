@@ -97,6 +97,12 @@ var frontCanvas = tooltipCanvas;
 syncCanvasMotion();
 
 
+function clearFrame() {
+  for (var canvas of allCanvases) {
+    canvas.clear();
+  }
+}
+
 function renderFrame() {
   for (var canvas of allCanvases) {
     canvas.requestRenderAll();
@@ -140,8 +146,9 @@ function initCanvasObjects() {
 
   var mapPixelSize = 2 * outerPadding + (frameWidth - 1) * innerPadding + frameWidth * tileSize;
   var baseObject = drawRect(mapPixelSize / 2, mapPixelSize / 2, mapPixelSize, mapPixelSize, DARK_GRAY);
+  var baseObject2 = drawRect(mapPixelSize / 2, mapPixelSize / 2, mapPixelSize - 2 * outerPadding, mapPixelSize - 2 * outerPadding, WHITE);
   var tileObjects = passGrid.flat();
-  // tileObjects.unshift(baseObject);
+  tileObjects = [baseObject, baseObject2].concat(tileObjects);
   var tileGroup = new fabric.Group(tileObjects, {"selectable": false});
   passCanvas.setBackgroundImage(tileGroup);
   // end of tiles
@@ -222,7 +229,7 @@ function initCanvasObjects() {
 }
 
 
-function drawInitFrame() {
+function resetInitFrame() {
   console.log("draw init frame")
 
   roundNum = 0;
@@ -239,9 +246,6 @@ function drawInitFrame() {
       }
     }
   }
-
-  renderFrame();
-  setRoundNum(0);
 }
 
 function getPassColor(passability) {
@@ -271,11 +275,11 @@ function getPassColor(passability) {
 }
 
 function getUnitInfo(team_id, struct_id) {
-  return { name: structID2Name[struct_id], team: team2Text[team_id], color: team2Color[team_id] }
+  return { type: structID2Name[struct_id], team: team2Text[team_id], color: team2Color[team_id], team_id: team_id }
 }
 
 function setIcon(i, j, unit) {
-  var textSymbol = unit.name[0];
+  var textSymbol = unit.type[0];
   if (textSymbol == "R") {
     textSymbol = ".";
   }
@@ -289,33 +293,35 @@ function setIcon(i, j, unit) {
 }
 
 // base data from
-var baseFrame = null;
-var frameChanges = null;
+var baseFrame;
+var frameChanges;
 
-var popMap = null;
-var passMap = null;
-var structureMap = null;
+var popMap;
+var passMap;
+var structureMap;
 
-var moneyHistory = null;
-var utilityHistory = null;
+var moneyHistory;
+var utilityHistory;
 
 var metadata = {};
 
 var structName2ID = {};
 var structID2Name = {};
 var loadedFrames = false;
-var frames = [];
-var frameWidth = -1;
-var frameHeight = -1;
-var numFrameChanges = -1;
+var frameWidth;
+var frameHeight;
+var numFrameChanges;
 
-var winner = "";
-
-var roundNum = 0;
+var roundNum;
 var curFrame;
+
+var unitCounts;
+var unitNames = [];
 
 fileInput.addEventListener("change", uploadReplay, false);
 function uploadReplay(event) {
+  clearFrame();
+  loadedFrames = false;
   if (event.target.files.length > 0) {
     var reader = new FileReader();
     reader.onload = function(event) {
@@ -385,7 +391,6 @@ function loadData(data) {
   }
 
   baseFrame = JSON.parse(JSON.stringify(curFrame));
-  frames.push(baseFrame);
   roundNum = 0;
 
   console.log("Read " + numFrameChanges + " frames");
@@ -405,11 +410,10 @@ function loadData(data) {
   displayMetadata();
   initCanvasObjects();
 
-  drawInitFrame();
+  resetInitFrame();
+  setRoundNum(0);
 }
 
-var unitCounts;
-var unitNames = [];
 function calculateUnitStats() {
   unitCounts = [];
   var curUnitCount = [];
@@ -419,13 +423,23 @@ function calculateUnitStats() {
       curUnitCount[i][unit] = 0;
     }
   }
+  // count baseFrame units
+  for (var x = 0; x < frameWidth; x++) {
+    for (var y = 0; y < frameHeight; y++) {
+      var unit = baseFrame[x][y];
+      if (unit != null) {
+        curUnitCount[unit.team_id][unit.type] += 1;
+      }
+    }
+  }
+
   unitCounts.push(JSON.parse(JSON.stringify(curUnitCount)));
 
   for (var fnum = 0; fnum < numFrameChanges; fnum++) {
     for (var structure of frameChanges[fnum]) {
-      var [x, y, team, st_type] = structure;
-      var unit = getUnitInfo(team, st_type);
-      curUnitCount[team][unit.name] += 1;
+      var [x, y, team_id, type_id] = structure;
+      var unit = getUnitInfo(team_id, type_id);
+      curUnitCount[team_id][unit.type] += 1;
     }
     unitCounts.push(JSON.parse(JSON.stringify(curUnitCount)));
   }
@@ -435,7 +449,7 @@ function calculateUnitStats() {
 function displayMetadata() {
   metadataText.innerHTML = "Team RED: " + metadata.p1_name + "<br>";
   metadataText.innerHTML += "Team BLUE: " + metadata.p2_name + "<br>";
-  metadataText.innerHTML += "Version: " + metadata.version;
+  metadataText.innerHTML += "Engine Version: " + metadata.version;
 };
 
 prevRoundButton.onclick = prevRound;
@@ -465,8 +479,8 @@ function nextRound() {
 function getNewFrame(targetRound, oldRoundNum) {
   for (var fnum = oldRoundNum; fnum < targetRound; fnum++) {
     for (var structure of frameChanges[fnum]) {
-      var [x, y, team, st_type] = structure;
-      curFrame[x][y] = getUnitInfo(team, st_type);
+      var [x, y, team_id, type_id] = structure;
+      curFrame[x][y] = getUnitInfo(team_id, type_id);
 
       setIcon(x, y, curFrame[x][y]);
     }
@@ -479,7 +493,7 @@ function setRoundNum(num) {
 
   // reset curFrame if we are going backwards
   if (roundNum > num) {
-    drawInitFrame();
+    resetInitFrame();
   }
 
   var oldRoundNum = roundNum;
@@ -504,32 +518,32 @@ function displayGameInfo() {
 
   // display game info text
   for (var t = 0; t < 2; t++) {
-    moneyTexts[t].style.color = team2Color[t];
-    moneyTexts[t].innerHTML = "Team " + team2Text[t] + " Money: " + moneyHistory[roundNum][t];
-
     // update charts
     moneyChart.data.datasets[0].data[t] = moneyHistory[roundNum][t]
     moneyChart.update()
     utilityChart.data.datasets[0].data[t] = utilityHistory[roundNum][t]
     utilityChart.update()
 
-    moneyCanvases[t].clear();
-    var bar = drawRect(0, 0, moneyHistory[roundNum][t]/10, 25, team2Color[t]);
-    bar.originX = "left";
-    bar.originY = "top";
-    moneyCanvases[t].add(bar);
-
-    utilityTexts[t].style.color = team2Color[t];
-    utilityTexts[t].innerHTML = "Team " + team2Text[t] + " Utility: " + utilityHistory[roundNum][t];
-
-    unitTexts[t].style.color = team2Color[t];
-    unitTexts[t].innerHTML = "Team " + team2Text[t] + " Units: " + JSON.stringify(unitCounts[roundNum][t]);
+    unitDivs[t].innerHTML = "";
+    unitDivs[t].style.color = team2Color[t];
+    for (var unit in unitCounts[roundNum][t]) {
+      var count = unitCounts[roundNum][t][unit];
+      unitDivs[t].innerHTML += `
+      <div class="col">
+        ${unit[0]}: ${count}
+      </div>
+      `;
+    }
   }
 
 }
 
 var curTooltipPos;
 function displayTooltipInfo(x, y) {
+  if (curTooltipPos != null && curTooltipPos[0] == x && curTooltipPos[1] == y) {
+    return;
+  }
+
   towerCoverObject.set("visible", false);
 
   if ( !(0 <= x && x < frameWidth && 0 <= y && y < frameHeight) ) {
@@ -541,21 +555,20 @@ function displayTooltipInfo(x, y) {
 
   curTooltipPos = [x, y];
 
-  tooltipPosText.innerHTML = "Position: (" + [x, y] + ")";
-  tooltipPassText.innerHTML = "Passability: " + passMap[x][y];
-  tooltipPopText.innerHTML = "Population: " + popMap[x][y];
+  tooltipPosText.innerHTML = [x, y];
+  tooltipPassText.innerHTML = passMap[x][y];
+  tooltipPopText.innerHTML = popMap[x][y];
 
-  tooltipStructureText.innerHTML = "Structure: ";
   if (curFrame[x][y] == null) {
-    tooltipStructureText.innerHTML += "None"
-    tooltipStructureText.style.color = BLACK;
+    tooltipStructText.innerHTML = "";
+    tooltipStructText.style.color = BLACK;
   } else {
     var unit = curFrame[x][y];
-    tooltipStructureText.innerHTML += unit.name + ", " + unit.team;
-    tooltipStructureText.style.color = unit.color;
+    tooltipStructText.innerHTML = unit.type;
+    tooltipStructText.style.color = unit.color;
 
     // display radius for tower
-    if (unit.name == "Tower") {
+    if (unit.type == "Tower") {
       displayTowerRadius(x, y);
     }
   }
@@ -577,7 +590,7 @@ function clearTooltipInfo() {
   tooltipPosText.innerHTML = "";
   tooltipPassText.innerHTML = "";
   tooltipPopText.innerHTML = "";
-  tooltipStructureText.innerHTML = "";
+  tooltipStructText.innerHTML = "";
 }
 
 function decreaseSpeed() {
