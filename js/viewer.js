@@ -529,8 +529,10 @@ function displayGameInfo() {
     for (var unit in unitCounts[roundNum][t]) {
       var count = unitCounts[roundNum][t][unit];
       unitDivs[t].innerHTML += `
-      <div class="col">
-        ${unit[0]}: ${count}
+      <div class="col" align="center">
+        ${unit[0]}
+        <br>
+        ${count}
       </div>
       `;
     }
