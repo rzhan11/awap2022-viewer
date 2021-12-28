@@ -149,7 +149,7 @@ function initCanvasObjects() {
   // tiles
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
-      var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize - 0.5;
+      var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
       var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
 
       var color = getPassColor(passMap[i][j]);
@@ -328,6 +328,9 @@ var structureMap;
 var moneyHistory;
 var utilityHistory;
 
+var redMoneyHistory;
+var blueMoneyHistory;
+
 var metadata = {};
 
 var structName2ID = {};
@@ -369,6 +372,20 @@ function loadData(data) {
   frameChanges = obj["frame_changes"];
 
   moneyHistory = obj["money_history"];
+  console.log(moneyHistory)
+
+  redMoneyHistory = new Array(moneyHistory.length);
+  for (var i = 0; i < moneyHistory.length; i++) {
+    redMoneyHistory[i] = moneyHistory[i][0];
+  }
+
+  blueMoneyHistory = new Array(moneyHistory.length);
+  for (var i = 0; i < moneyHistory.length; i++) {
+    blueMoneyHistory[i] = moneyHistory[i][1];
+  }
+
+  console.log(redMoneyHistory)
+  console.log(blueMoneyHistory)
   utilityHistory = obj["utility_history"];
 
   structName2ID = {};
@@ -553,8 +570,8 @@ function displayGameInfo() {
     unitDivs[t].innerHTML = "";
     unitDivs[t].style.color = team2Color[t];
     for (var unit in unitCounts[roundNum][t]) {
-      console.log(unit);
-      console.log(unitCounts[roundNum][t]);
+      // console.log(unit);
+      // console.log(unitCounts[roundNum][t]);
       var count = unitCounts[roundNum][t][unit];
       unitDivs[t].innerHTML += `
       <div class="col" align="center">
@@ -565,6 +582,21 @@ function displayGameInfo() {
       `;
     }
   }
+
+  var rounds = new Array(roundNum+1);
+  for (var i = 0; i < roundNum+1; i++) {
+    rounds[i] = (i+1).toString();
+  }
+
+  moneyLineChart.data.datasets[0].data = redMoneyHistory.slice(0, roundNum + 1);
+  moneyLineChart.data.datasets[1].data = blueMoneyHistory.slice(0, roundNum + 1);
+  moneyLineChart.data.labels = rounds;
+  moneyLineChart.update();
+
+  console.log(roundNum);
+  console.log("red", redMoneyHistory.slice(0, roundNum + 1));
+  console.log("blue", blueMoneyHistory.slice(0, roundNum + 1));
+  console.log("rounds", rounds);
 
 }
 

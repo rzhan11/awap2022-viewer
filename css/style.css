@@ -15,16 +15,6 @@ input[type="file"] {
     height: 100vh;
 }
 
-.money {
-    overflow: hidden;
-    width: 100%;
-}
-
-.money-col {
-  float: left;
-  width: 45%;
-}
-
 /* Clear floats after the columns */
 .money-row:after {
   content: "";
