@@ -331,6 +331,9 @@ var utilityHistory;
 var redMoneyHistory;
 var blueMoneyHistory;
 
+var redUtilityHistory;
+var blueUtilityHistory;
+
 var metadata = {};
 
 var structName2ID = {};
@@ -372,7 +375,7 @@ function loadData(data) {
   frameChanges = obj["frame_changes"];
 
   moneyHistory = obj["money_history"];
-  console.log(moneyHistory)
+  // console.log(moneyHistory)
 
   redMoneyHistory = new Array(moneyHistory.length);
   for (var i = 0; i < moneyHistory.length; i++) {
@@ -384,9 +387,19 @@ function loadData(data) {
     blueMoneyHistory[i] = moneyHistory[i][1];
   }
 
-  console.log(redMoneyHistory)
-  console.log(blueMoneyHistory)
+  // console.log(redMoneyHistory)
+  // console.log(blueMoneyHistory)
   utilityHistory = obj["utility_history"];
+
+  redUtilityHistory = new Array(utilityHistory.length);
+  for (var i = 0; i < utilityHistory.length; i++) {
+    redUtilityHistory[i] = utilityHistory[i][0];
+  }
+
+  blueUtilityHistory = new Array(utilityHistory.length);
+  for (var i = 0; i < utilityHistory.length; i++) {
+    blueUtilityHistory[i] = utilityHistory[i][1];
+  }
 
   structName2ID = {};
   structID2Name = {};
@@ -583,20 +596,49 @@ function displayGameInfo() {
     }
   }
 
-  var rounds = new Array(roundNum+1);
-  for (var i = 0; i < roundNum+1; i++) {
-    rounds[i] = (i+1).toString();
+  if (roundNum >= 10) {
+
+    var rounds = new Array(10);
+    for (var i = 0; i < 10; i++) {
+      rounds[i] = (roundNum - 8 + i).toString();
+    }
+
+    moneyLineChart.data.datasets[0].data = redMoneyHistory.slice(roundNum - 8, roundNum + 1);
+    moneyLineChart.data.datasets[1].data = blueMoneyHistory.slice(roundNum - 8, roundNum + 1);
+    moneyLineChart.data.labels = rounds;
+    moneyLineChart.update();
+
+    utilityLineChart.data.datasets[0].data = redUtilityHistory.slice(roundNum - 8, roundNum + 1);
+    utilityLineChart.data.datasets[1].data = blueUtilityHistory.slice(roundNum - 8, roundNum + 1);
+    utilityLineChart.data.labels = rounds;
+    utilityLineChart.update();
+
+    // console.log("roundNum: ", roundNum);
+    // console.log("red", moneyLineChart.data.datasets[0].data);
+    // console.log("blue", moneyLineChart.data.datasets[1].data);
+    // console.log("rounds", rounds);
   }
+  else {
+    var rounds = new Array(roundNum + 1);
+    for (var i = 0; i < roundNum + 1; i++) {
+      rounds[i] = i.toString();
+    }
 
-  moneyLineChart.data.datasets[0].data = redMoneyHistory.slice(0, roundNum + 1);
-  moneyLineChart.data.datasets[1].data = blueMoneyHistory.slice(0, roundNum + 1);
-  moneyLineChart.data.labels = rounds;
-  moneyLineChart.update();
+    moneyLineChart.data.datasets[0].data = redMoneyHistory.slice(0, roundNum + 1);
+    moneyLineChart.data.datasets[1].data = blueMoneyHistory.slice(0, roundNum + 1);
+    moneyLineChart.data.labels = rounds;
+    moneyLineChart.update();
 
-  console.log(roundNum);
-  console.log("red", redMoneyHistory.slice(0, roundNum + 1));
-  console.log("blue", blueMoneyHistory.slice(0, roundNum + 1));
-  console.log("rounds", rounds);
+    utilityLineChart.data.datasets[0].data = redUtilityHistory.slice(0, roundNum + 1);
+    utilityLineChart.data.datasets[1].data = blueUtilityHistory.slice(0, roundNum + 1);
+    utilityLineChart.data.labels = rounds;
+    utilityLineChart.update();
+
+    // console.log("roundNum: ", roundNum);
+    // console.log("red", moneyLineChart.data.datasets[0].data);
+    // console.log("blue", moneyLineChart.data.datasets[1].data);
+    // console.log("rounds", rounds);
+  }
 
 }
 
