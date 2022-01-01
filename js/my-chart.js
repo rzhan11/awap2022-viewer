@@ -56,7 +56,33 @@ const moneyChart = new Chart(moneyCtx, {
       }
     ]
   },
-  options: chartOptions
+  options: {
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: "Money",
+        padding: {
+          top: 1,
+          bottom: 1
+        }
+      },
+      legend: {
+        display: false,
+      },
+      // datalabels: {
+      //   display: false,
+      // }
+    },
+    elements: {
+      point:{
+        radius: 0
+      }
+    },
+    animation: {
+      duration: 0
+    }
+  }
 });
 
 
@@ -130,8 +156,6 @@ const moneyLineChart = new Chart(moneyLineCtx, {
   options: chartOptions,
 });
 
-chartOptions = JSON.parse(JSON.stringify(chartOptions));
-chartOptions.plugins.title.text = "Utility";
 const utilityLineCtx = document.getElementById('utility-line').getContext('2d');
 const utilityLineChart = new Chart(utilityLineCtx, {
   type: 'line',
@@ -161,5 +185,28 @@ const utilityLineChart = new Chart(utilityLineCtx, {
       }
     ]
   },
-  options: chartOptions,
+  options: {
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: "Utility",
+        padding: {
+          top: 1,
+          bottom: 1
+        }
+      },
+      datalabels: {
+        display: false,
+      }
+    },
+    elements: {
+      point:{
+        radius: 0
+      }
+    },
+    animation: {
+      duration: 0
+    }
+  }
 });
