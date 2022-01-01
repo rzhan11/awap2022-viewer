@@ -334,6 +334,7 @@ function setIcon(i, j) {
       // iconGrid[i][j].set("fill", unit.color);
       // iconGrid[i][j].set("text", textSymbol);
       iconGrid[i][j].setSrc(`../img/${(unit.team + unit.type).toLowerCase()}.png`, function (image) {
+        console.log("hi")
         iconCanvas.renderAll();
       });
       textGrid[i][j].set("visible", false);
@@ -482,6 +483,9 @@ function loadData(data) {
   // set up range slider
   frameRange.max = metadata.maxRound;
   frameRange.oninput = function() {
+    if (framePlaying) {
+      changePlay();
+    }
     setRoundNum(parseInt(this.value))
   }
 
@@ -601,7 +605,8 @@ function displayGameInfo() {
   // display game info text
   for (var t = 0; t < 2; t++) {
     // update charts
-    moneyChart.data.datasets[0].data[t] = moneyHistory[roundNum][t]
+    moneyChart.data.datasets[t].label = moneyHistory[roundNum][t];
+    moneyChart.data.datasets[t].data[0] = moneyHistory[roundNum][t];
     moneyChart.update()
     utilityChart.data.datasets[0].data[t] = utilityHistory[roundNum][t]
     utilityChart.update()
@@ -627,7 +632,8 @@ function displayGameInfo() {
     utilityLineChart.data.datasets[t].label = utilityHistory[roundNum][t];
   }
 
-  var numPastRounds = Math.min(10, roundNum + 1);
+  // var numPastRounds = Math.min(10, roundNum + 1);
+  var numPastRounds = roundNum + 1;
 
   var leftRange = roundNum + 1 - numPastRounds;
   var rightRange = roundNum + 1;

@@ -27,3 +27,16 @@ input[type="file"] {
   margin: 10px;
   background-color: white;
 }
+
+.same-line {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.control-button {
+  width: 40px;
+}
+
+.line-chart {
+  width: 100%;
+}

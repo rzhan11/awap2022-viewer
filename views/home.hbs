@@ -51,52 +51,40 @@
 				<!-- </div> -->
 
 				<div class="row row-content">
-					<div class="col-auto">
-						<label class="btn btn-primary btn-small">
+					<div class="col-7">
+						<label class="btn btn-primary btn-sm same-line">
 						    <input type="file" id="file-input"/>
 						    <i></i> Upload Replay File
 						</label>
+						<button class="btn btn-primary btn-sm same-line" id="help-modal-button">Help</button>
 					</div>
-					<div class="col-auto">
-						<button class="btn btn-primary btn-small" id="help-modal-button">Help</button>
+
+					<div class="col-5">
+						<div class="row row-content">
+							<div class="col align-self-center">
+								<p class='no-margin'>Round: <span id="round-text">0 / 0</span> </p>
+							</div>
+						</div>
 					</div>
 				</div>
 
 				<div class="row row-content">
-					<div class='col-2 align-self-center'>
-						<p class='no-margin'>Round:</p>
+
+					<div class="col-7">
+								<button id="slower-speed-button" class="btn btn-primary btn-sm same-line control-button">&lt;&lt;</button>
+								<button id="prev-round-button" class="btn btn-primary btn-sm same-line control-button">&lt;</button>
+								<button id="play-button" class="btn btn-primary btn-sm same-line" style="width: 60px;">Play</button>
+								<button id="next-round-button" class="btn btn-primary btn-sm same-line control-button">&gt;</button>
+								<button id="faster-speed-button" class="btn btn-primary btn-sm same-line control-button">&gt;&gt;</button>
 					</div>
-					<div class="col-auto">
-						<button id="prev-round-button" class="btn btn-primary btn-sm">&lt; Prev</button>
-					</div>
-					<div class="col-5" align="center">
-						<p style="display:inline" id="round-text">0 / 0</p>
-					</div>
-					<div class="col-auto">
-						<button id="next-round-button" class="btn btn-primary btn-sm">Next &gt;</button>
+
+					<div class="col-5">
+						<p class='no-margin'>Speed: <span id="speed-text">0</span></p>
 					</div>
 				</div>
 
 				<div class="row row-content">
-					<div class="col-2 align-self-center">
-						<p class='no-margin'>Speed:</p>
-					</div>
-					<div class="col-auto">
-						<button id="slower-speed-button" class="btn btn-primary btn-sm">&lt; Prev</button>
-					</div>
-					<div class="col-5" align="center">
-						<p style=" display:inline" id="speed-text"></p>
-					</div>
-					<div class="col-auto">
-						<button id="faster-speed-button" class="btn btn-primary btn-sm">Next &gt;</button>
-					</div>
-				</div>
-
-				<div class="row row-content">
-					<div class="col-2">
-						<button class="btn btn-primary btn-small" id="play-button">Play</button>
-					</div>
-					<div class="col-10 align-self-center">
+					<div class="col align-self-center">
 						<div class="slidecontainer">
 							<input type="range" min="1" max="1" value="0" class="slider" id="frame-range" style="width: calc(100% - 40px); max-width: 100%">
 						</div>
@@ -109,49 +97,53 @@
 				<!-- <div class="row row-content"> -->
 				<!-- </div> -->
 
-						<div class="row row-content">
-							<div class="col-6">
-								<div class="game-info" hidden=true> <canvas id="money-chart" width="300" height="200"></canvas> </div>
-							</div>
-							<div class="col-6">
-								<div class="game-info" hidden=true> <canvas id="utility-chart" width="300" height="200"></canvas> </div>
-							</div>
-						</div>
-						<div class="row row-content">
-							<div class="col">
-								<div class="game-info">
-								<p> Position: <span id="tooltip-pos-text"></span> </p>
-								<p> Passability: <span id="tooltip-pass-text"></span> </p>
-								<p> Population: <span id="tooltip-pop-text"></span> </p>
-								<p> Structure: <span id="tooltip-struct-text"></span> </p>
-								</div>
-							</div>
+				<div class="row row-content">
+					<div class="col-6">
+						<div class="game-info"> <canvas id="money-chart" width="300" height="200"></canvas> </div>
+					</div>
 
-							<div class="col">
-								<div class="game-info">
-									<div class="row" id="p1-unit-div"> </div>
-									<div class="row" id="p2-unit-div"> </div>
-								</div>
-							</div>
-
+					<div class="col">
+						<div class="game-info">
+							<div class="row" id="p1-unit-div"> </div>
+							<div class="row" id="p2-unit-div"> </div>
 						</div>
+					</div>
+				</div>
+				<div class="col-6">
+					<div class="game-info" hidden=true> <canvas id="utility-chart" width="300" height="200"></canvas> </div>
+				</div>
 
-						<div class="row row-content">
-							<div class="col">
-								<div class="game-info">
-									<p id="metadata-text"></p>
-								</div>
-							</div>
-						</div>
+				<div class="row row-content">
+					<div class="col">
+						<div class="game-info" hidden=true> <canvas id="money-line" width="100" height="35"></canvas> </div>
+					</div>
+				</div>
+				<div class="row row-content">
+					<div class="col">
+						<div class="game-info"> <canvas id="utility-line" width="100" height="35"></canvas> </div>
+					</div>
+				</div>
 
-						<div class="row row-content">
-							<div class="col-6">
-								<div class="game-info"> <canvas id="money-line" width="300" height="300"></canvas> </div>
-							</div>
-							<div class="col-6">
-								<div class="game-info"> <canvas id="utility-line" width="300" height="300"></canvas> </div>
-							</div>
+
+				<div class="row row-content">
+					<div class="col">
+						<div class="game-info">
+						<p> Position: <span id="tooltip-pos-text"></span> </p>
+						<p> Passability: <span id="tooltip-pass-text"></span> </p>
+						<p> Population: <span id="tooltip-pop-text"></span> </p>
+						<p> Structure: <span id="tooltip-struct-text"></span> </p>
 						</div>
+					</div>
+
+				</div>
+
+				<div class="row row-content">
+					<div class="col">
+						<div class="game-info">
+							<p id="metadata-text"></p>
+						</div>
+					</div>
+				</div>
 				<br>
 			</div>
 		</div>
