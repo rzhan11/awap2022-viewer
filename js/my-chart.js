@@ -1,15 +1,15 @@
-Chart.register(ChartDataLabels);
-Chart.defaults.set('plugins.datalabels', {
-  color: 'black'
-});
+// Chart.register(ChartDataLabels);
+// Chart.defaults.set('plugins.datalabels', {
+//   color: 'black'
+// });
 
 const moneyCtx = document.getElementById('money-chart').getContext('2d');
 const moneyChart = new Chart(moneyCtx, {
   type: 'bar',
   data: {
-    labels: ['p1', 'p2'],
+    labels: ['', ''],
     datasets: [{
-        label: 'Money',
+        label: '',
         data: [0, 0],
         backgroundColor: [
             'rgba(255, 99, 132, 0.2)',
@@ -23,26 +23,19 @@ const moneyChart = new Chart(moneyCtx, {
     }]
   },
   options: {
-    scales: {
-      // x: {
-      //   title: {
-      //     display: true,
-      //     text: "Money",
-      //   }
-      // },
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: "Money",
+    plugins: {
+      title: {
+        display: true,
+        text: "Money",
+        padding: {
+          top: 1,
+          bottom: 1
         }
       },
-    },
-    plugins: {
       legend: {
         display: false
       }
-    }
+    },
   }
 });
 
@@ -51,9 +44,9 @@ const utilityCtx = document.getElementById('utility-chart').getContext('2d');
 const utilityChart = new Chart(utilityCtx, {
   type: 'bar',
   data: {
-    labels: ['p1', 'p2'],
+    labels: ['', ''],
     datasets: [{
-        label: 'Money',
+        label: '',
         data: [0, 0],
         backgroundColor: [
             'rgba(255, 99, 132, 0.2)',
@@ -67,26 +60,19 @@ const utilityChart = new Chart(utilityCtx, {
     }]
   },
   options: {
-    scales: {
-      // x: {
-      //   title: {
-      //     display: true,
-      //     text: "Money",
-      //   }
-      // },
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: "Utility",
+    plugins: {
+      title: {
+        display: true,
+        text: "Utility",
+        padding: {
+          top: 1,
+          bottom: 1
         }
       },
-    },
-    plugins: {
       legend: {
         display: false
       }
-    }
+    },
   }
 });
 
@@ -96,7 +82,7 @@ const moneyLineChart = new Chart(moneyLineCtx, {
     data: {
       labels: [""],
       datasets: [{
-          label: "p1",
+          label: "",
           data: [0],
           backgroundColor: [
             'rgba(255, 99, 132, 0.2)'
@@ -107,7 +93,7 @@ const moneyLineChart = new Chart(moneyLineCtx, {
           borderWidth: 2
         },
         {
-          label: "p2",
+          label: "",
           data: [0],
           backgroundColor: [
             'rgba(54, 162, 235, 0.2)'
@@ -129,7 +115,10 @@ const moneyLineChart = new Chart(moneyLineCtx, {
             top: 1,
             bottom: 1
           }
-        }
+        },
+        // legend: {
+        //   display: false
+        // }
       },
       scales: {
         x: {
@@ -148,7 +137,7 @@ const utilityLineChart = new Chart(utilityLineCtx, {
     data: {
       labels: [""],
       datasets: [{
-          label: "p1",
+          label: "",
           data: [0],
           backgroundColor: [
             'rgba(255, 99, 132, 0.2)'
@@ -159,7 +148,7 @@ const utilityLineChart = new Chart(utilityLineCtx, {
           borderWidth: 2
         },
         {
-          label: "p2",
+          label: "",
           data: [0],
           backgroundColor: [
             'rgba(54, 162, 235, 0.2)'
@@ -181,7 +170,10 @@ const utilityLineChart = new Chart(utilityLineCtx, {
             top: 1,
             bottom: 1
           }
-        }
+        },
+        // legend: {
+        //   display: false
+        // }
       },
       scales: {
         x: {

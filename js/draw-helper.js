@@ -45,7 +45,19 @@ function drawCircle(x, y, radius, color) {
     radius: radius,
     fill: color,
     stroke: BLACK,
-    strokeWidth: 1,
+    strokeWidth: 0.5,
+    originX: "center",
+    originY: "center",
+    objectCaching: false
+  });
+  return obj;
+}
+
+function drawImage(img, x, y, opacity=1) {
+  var obj = new fabric.Image(img, {
+    scaleX: 0.13, scaleY: 0.13,
+    left: y, top: x,
+    opacity: opacity,
     originX: "center",
     originY: "center",
     objectCaching: false

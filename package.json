@@ -1,7 +1,7 @@
 {
-  "name": "battlehack2020-viewer",
+  "name": "awap2022-viewer",
   "version": "1.0.0",
-  "description": "Viewer for Battlehack 2020 replay files (from scrimmages)",
+  "description": "Viewer for AWAP 2022 replay files (from scrimmages)",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -129,6 +129,7 @@ function renderFrame() {
 var passGrid;
 var popGrid;
 var iconGrid;
+var textGrid;
 var shadeGrid;
 var tooltipObject;
 var towerCoverObject;
@@ -142,6 +143,7 @@ function tile2Pixels(tx, ty) {
 function initCanvasObjects() {
   passGrid = init2DArray(frameWidth, frameHeight);
   popGrid = init2DArray(frameWidth, frameHeight);
+  textGrid = init2DArray(frameWidth, frameHeight);
   iconGrid = init2DArray(frameWidth, frameHeight);
   shadeGrid = init2DArray(frameWidth, frameHeight);
 
@@ -158,24 +160,45 @@ function initCanvasObjects() {
   }
 
   var mapPixelSize = 2 * outerPadding + (frameWidth - 1) * innerPadding + frameWidth * tileSize;
-  var baseObject = drawRect(mapPixelSize / 2, mapPixelSize / 2, mapPixelSize, mapPixelSize, DARK_GRAY);
+  // baseObject0 for rendering issues, baseObject1 for gray border, baseObject2 for white grid lines
+  // var baseObject0 = drawRect(mapPixelSize / 2, mapPixelSize / 2, mapPixelSize + 2 * tileSize, mapPixelSize - 2 * outerPadding + 2 * tileSize, WHITE);
+  var baseObject1 = drawRect(mapPixelSize / 2, mapPixelSize / 2, mapPixelSize, mapPixelSize, DARK_GRAY);
   var baseObject2 = drawRect(mapPixelSize / 2, mapPixelSize / 2, mapPixelSize - 2 * outerPadding, mapPixelSize - 2 * outerPadding, WHITE);
   var tileObjects = passGrid.flat();
-  tileObjects = [baseObject, baseObject2].concat(tileObjects);
+  tileObjects = [baseObject1, baseObject2].concat(tileObjects);
   var tileGroup = new fabric.Group(tileObjects, {"selectable": false});
   passCanvas.setBackgroundImage(tileGroup);
   // end of tiles
+
+  // shades
+  for (var i = 0; i < frameHeight; i++) {
+    for (var j = 0; j < frameWidth; j++) {
+      var p = tile2Pixels(i, j);
+      shadeGrid[i][j] = drawBox(p[0], p[1], shadeTileSize, shadeTileSize, BLACK, shadeEdgeWidth, shadeOpacity);
+      shadeGrid[i][j].set("visible", false);
+    }
+  }
+
+  var shadeObjects = shadeGrid.flat();
+  var shadeGroup = new fabric.Group(shadeObjects, {selectable: false});
+  shadeCanvas.add(shadeGroup);
+  // end of shade
 
   // icons
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
       var p = tile2Pixels(i, j);
-      iconGrid[i][j] = drawText("", p[0], p[1], 15, BLACK);
+
+      textGrid[i][j] = drawText("", p[0], p[1], 15, BLACK);
+      textGrid[i][j].set("visible", false);
+
+      iconGrid[i][j] = drawImage("", p[0], p[1]);
       iconGrid[i][j].set("visible", false);
+      setIcon(i, j);
     }
   }
 
-  var iconObjects = iconGrid.flat();
+  var iconObjects = iconGrid.flat().concat(textGrid.flat());
   var iconGroup = new fabric.Group(iconObjects, {"selectable": false});
   iconCanvas.add(iconGroup);
   // end of icons
@@ -194,21 +217,6 @@ function initCanvasObjects() {
   var popGroup = new fabric.Group(popObjects, {"selectable": false});
   popCanvas.setBackgroundImage(popGroup);
   // end of population
-
-
-  // shades
-  for (var i = 0; i < frameHeight; i++) {
-    for (var j = 0; j < frameWidth; j++) {
-      var p = tile2Pixels(i, j);
-      shadeGrid[i][j] = drawBox(p[0], p[1], shadeTileSize, shadeTileSize, BLACK, shadeEdgeWidth, shadeOpacity);
-      shadeGrid[i][j].set("visible", false);
-    }
-  }
-
-  var shadeObjects = shadeGrid.flat();
-  var shadeGroup = new fabric.Group(shadeObjects, {selectable: false});
-  shadeCanvas.add(shadeGroup);
-  // end of shade
 
   // tower cover
   var towerCoverGrid = [];
@@ -263,12 +271,7 @@ function resetInitFrame() {
   // iterate through each tile and add icon/symbol for units
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
-      if (curFrame[i][j] !== null) {
-        setIcon(i, j, curFrame[i][j]);
-      } else {
-        iconGrid[i][j].set("visible", false);
-        shadeGrid[i][j].set("visible", false)
-      }
+      setIcon(i, j);
     }
   }
 }
@@ -303,18 +306,41 @@ function getUnitInfo(team_id, struct_id) {
   return { type: structID2Name[struct_id], team: team2Text[team_id], color: team2Color[team_id], team_id: team_id }
 }
 
-function setIcon(i, j, unit) {
-  var textSymbol = unit.type[0];
-  if (textSymbol == "R") {
-    textSymbol = ".";
+function setIcon(i, j) {
+  // console.log(i, j, curFrame[i][j])
+  var unit = curFrame[i][j];
+  if (unit == null) {
+    textGrid[i][j].set("visible", false);
+    iconGrid[i][j].set("visible", false);
+    shadeGrid[i][j].set("visible", false)
+  } else {
+    // shades
+    shadeGrid[i][j].set("stroke", unit.color)
+    shadeGrid[i][j].set("visible", true)
+
+    // icon
+    var textSymbol = unit.type[0];
+    if (unit.type == "Road") {
+      textSymbol = ".";
+      // show text
+      textGrid[i][j].set("fill", unit.color);
+      textGrid[i][j].set("text", textSymbol);
+      textGrid[i][j].set("visible", true);
+
+      // hide icons
+      iconGrid[i][j].set("visible", false);
+    } else {
+
+      // iconGrid[i][j].set("fill", unit.color);
+      // iconGrid[i][j].set("text", textSymbol);
+      iconGrid[i][j].setSrc(`../img/${(unit.team + unit.type).toLowerCase()}.png`, function (image) {
+        iconCanvas.renderAll();
+      });
+      textGrid[i][j].set("visible", false);
+      iconGrid[i][j].set("visible", true);
+    }
+
   }
-
-  iconGrid[i][j].set("fill", unit.color);
-  iconGrid[i][j].set("text", textSymbol);
-  iconGrid[i][j].set("visible", true)
-
-  shadeGrid[i][j].set("stroke", unit.color)
-  shadeGrid[i][j].set("visible", true)
 }
 
 // base data from
@@ -538,7 +564,7 @@ function getNewFrame(targetRound, oldRoundNum) {
       var [x, y, team_id, type_id] = structure;
       curFrame[x][y] = getUnitInfo(team_id, type_id);
 
-      setIcon(x, y, curFrame[x][y]);
+      setIcon(x, y);
     }
   }
 
@@ -596,50 +622,29 @@ function displayGameInfo() {
     }
   }
 
-  if (roundNum >= 10) {
-
-    var rounds = new Array(10);
-    for (var i = 0; i < 10; i++) {
-      rounds[i] = (roundNum - 8 + i).toString();
-    }
-
-    moneyLineChart.data.datasets[0].data = redMoneyHistory.slice(roundNum - 8, roundNum + 1);
-    moneyLineChart.data.datasets[1].data = blueMoneyHistory.slice(roundNum - 8, roundNum + 1);
-    moneyLineChart.data.labels = rounds;
-    moneyLineChart.update();
-
-    utilityLineChart.data.datasets[0].data = redUtilityHistory.slice(roundNum - 8, roundNum + 1);
-    utilityLineChart.data.datasets[1].data = blueUtilityHistory.slice(roundNum - 8, roundNum + 1);
-    utilityLineChart.data.labels = rounds;
-    utilityLineChart.update();
-
-    // console.log("roundNum: ", roundNum);
-    // console.log("red", moneyLineChart.data.datasets[0].data);
-    // console.log("blue", moneyLineChart.data.datasets[1].data);
-    // console.log("rounds", rounds);
-  }
-  else {
-    var rounds = new Array(roundNum + 1);
-    for (var i = 0; i < roundNum + 1; i++) {
-      rounds[i] = i.toString();
-    }
-
-    moneyLineChart.data.datasets[0].data = redMoneyHistory.slice(0, roundNum + 1);
-    moneyLineChart.data.datasets[1].data = blueMoneyHistory.slice(0, roundNum + 1);
-    moneyLineChart.data.labels = rounds;
-    moneyLineChart.update();
-
-    utilityLineChart.data.datasets[0].data = redUtilityHistory.slice(0, roundNum + 1);
-    utilityLineChart.data.datasets[1].data = blueUtilityHistory.slice(0, roundNum + 1);
-    utilityLineChart.data.labels = rounds;
-    utilityLineChart.update();
-
-    // console.log("roundNum: ", roundNum);
-    // console.log("red", moneyLineChart.data.datasets[0].data);
-    // console.log("blue", moneyLineChart.data.datasets[1].data);
-    // console.log("rounds", rounds);
+  for (var t = 0; t < 2; t++) {
+    moneyLineChart.data.datasets[t].label = moneyHistory[roundNum][t];
+    utilityLineChart.data.datasets[t].label = utilityHistory[roundNum][t];
   }
 
+  var numPastRounds = Math.min(10, roundNum + 1);
+
+  var leftRange = roundNum + 1 - numPastRounds;
+  var rightRange = roundNum + 1;
+  var roundLabels = new Array(numPastRounds);
+  for (var i = 0; i < numPastRounds; i++) {
+    roundLabels[i] = (leftRange + i).toString();
+  }
+
+  moneyLineChart.data.datasets[0].data = redMoneyHistory.slice(leftRange, rightRange);
+  moneyLineChart.data.datasets[1].data = blueMoneyHistory.slice(leftRange, rightRange);
+  moneyLineChart.data.labels = roundLabels;
+  moneyLineChart.update();
+
+  utilityLineChart.data.datasets[0].data = redUtilityHistory.slice(leftRange, rightRange);
+  utilityLineChart.data.datasets[1].data = blueUtilityHistory.slice(leftRange, rightRange);
+  utilityLineChart.data.labels = roundLabels;
+  utilityLineChart.update();
 }
 
 var curTooltipPos;
