@@ -14,6 +14,7 @@ var outerPadding = 5;
 var innerPadding = 1;
 var tileSize = 15;
 var wordFontSize = 15;
+var iconSize = 13;
 var edgeWidth = 5;
 
 // calculated tile pixel constants

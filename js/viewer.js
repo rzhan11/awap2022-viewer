@@ -128,9 +128,11 @@ function renderFrame() {
 
 var passGrid;
 var popGrid;
-var iconGrid;
+// var iconGrid;
 var textGrid;
 var shadeGrid;
+
+// var iconGroup;
 var tooltipObject;
 var towerCoverObject;
 
@@ -144,7 +146,7 @@ function initCanvasObjects() {
   passGrid = init2DArray(frameWidth, frameHeight);
   popGrid = init2DArray(frameWidth, frameHeight);
   textGrid = init2DArray(frameWidth, frameHeight);
-  iconGrid = init2DArray(frameWidth, frameHeight);
+  // iconGrid = init2DArray(frameWidth, frameHeight);
   shadeGrid = init2DArray(frameWidth, frameHeight);
 
 
@@ -153,7 +155,6 @@ function initCanvasObjects() {
     for (var j = 0; j < frameWidth; j++) {
       var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
       var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
-
       var color = getPassColor(passMap[i][j]);
       passGrid[i][j] = drawRect(x, y, tileSize, tileSize, color);
     }
@@ -184,6 +185,7 @@ function initCanvasObjects() {
   shadeCanvas.add(shadeGroup);
   // end of shade
 
+
   // icons
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
@@ -192,15 +194,9 @@ function initCanvasObjects() {
       textGrid[i][j] = drawText("", p[0], p[1], 15, BLACK);
       textGrid[i][j].set("visible", false);
 
-      iconGrid[i][j] = drawImage("", p[0], p[1]);
-      iconGrid[i][j].set("visible", false);
       setIcon(i, j);
     }
   }
-
-  var iconObjects = iconGrid.flat().concat(textGrid.flat());
-  var iconGroup = new fabric.Group(iconObjects, {"selectable": false});
-  iconCanvas.add(iconGroup);
   // end of icons
 
   // population
@@ -220,7 +216,7 @@ function initCanvasObjects() {
 
   // tower cover
   var towerCoverGrid = [];
-  var towerR2 = 25;
+  var towerR2 = GC.TOWER_RADIUS;
   var maxDiff = Math.floor(Math.sqrt(towerR2));
   for (var dx = -maxDiff; dx <= maxDiff; dx++) {
     for (var dy = -maxDiff; dy <= maxDiff; dy++) {
@@ -268,6 +264,7 @@ function resetInitFrame() {
   roundNum = 0;
   curFrame = JSON.parse(JSON.stringify(baseFrame));
 
+  iconCanvas.clear();
   // iterate through each tile and add icon/symbol for units
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
@@ -277,7 +274,7 @@ function resetInitFrame() {
 }
 
 function getPassColor(passability) {
-  var relPass = (passability - minPass) / (maxPass - minPass);
+  var relPass = (passability - GC.MIN_PASS) / (GC.MAX_PASS - GC.MIN_PASS);
   if (relPass <= 0.05) {
     relPass = 0.05;
   }
@@ -311,7 +308,7 @@ function setIcon(i, j) {
   var unit = curFrame[i][j];
   if (unit == null) {
     textGrid[i][j].set("visible", false);
-    iconGrid[i][j].set("visible", false);
+    // iconGrid[i][j].set("visible", false);
     shadeGrid[i][j].set("visible", false)
   } else {
     // shades
@@ -321,27 +318,37 @@ function setIcon(i, j) {
     // icon
     var textSymbol = unit.type[0];
     if (unit.type == "Road") {
+      console.log("here", i, j)
       textSymbol = ".";
       // show text
       textGrid[i][j].set("fill", unit.color);
       textGrid[i][j].set("text", textSymbol);
       textGrid[i][j].set("visible", true);
-
-      // hide icons
-      iconGrid[i][j].set("visible", false);
+      iconCanvas.add(textGrid[i][j]);
     } else {
-
-      // iconGrid[i][j].set("fill", unit.color);
-      // iconGrid[i][j].set("text", textSymbol);
-      iconGrid[i][j].setSrc(`../img/${(unit.team + unit.type).toLowerCase()}.png`, function (image) {
-        console.log("hi")
-        iconCanvas.renderAll();
-      });
-      textGrid[i][j].set("visible", false);
-      iconGrid[i][j].set("visible", true);
+      console.log("herex", i, j)
+      setIconImage(i, j);
     }
 
   }
+
+  // iconGrid[i][j].set("visible", true)
+}
+
+function setIconImage(i, j) {
+  var unit = curFrame[i][j];
+  // iconGrid[i][j].setSrc(`../img/${(unit.team + unit.type).toLowerCase()}.png`, function (image) {
+  //   iconCanvas.renderAll();
+  // });
+  var p = tile2Pixels(i, j);
+  drawImage(`../img/${(unit.team + unit.type).toLowerCase()}.png`, p[0], p[1], iconSize, iconSize,
+  function (img) {
+    iconCanvas.add(img);
+    iconCanvas.requestRenderAll();
+  });
+
+  textGrid[i][j].set("visible", false);
+  // iconGrid[i][j].set("visible", true);
 }
 
 // base data from
@@ -362,10 +369,11 @@ var redUtilityHistory;
 var blueUtilityHistory;
 
 var metadata = {};
+var GC;
 
 var structName2ID = {};
 var structID2Name = {};
-var loadedFrames = false;
+var hasLoadedFrames = false;
 var frameWidth;
 var frameHeight;
 var numFrameChanges;
@@ -379,7 +387,7 @@ var unitNames = [];
 fileInput.addEventListener("change", uploadReplay, false);
 function uploadReplay(event) {
   clearFrame();
-  loadedFrames = false;
+  hasLoadedFrames = false;
   if (event.target.files.length > 0) {
     var reader = new FileReader();
     reader.onload = function(event) {
@@ -398,6 +406,8 @@ function loadData(data) {
   console.log(obj);
 
   metadata = obj["metadata"];
+
+  GC = obj.game_constants;
 
   frameChanges = obj["frame_changes"];
 
@@ -478,7 +488,7 @@ function loadData(data) {
 
   console.log("Read " + numFrameChanges + " frames");
 
-  loadedFrames = true;
+  hasLoadedFrames = true;
   metadata.maxRound = numFrameChanges;
   // set up range slider
   frameRange.max = metadata.maxRound;
@@ -547,7 +557,7 @@ fasterSpeedButton.onclick = increaseSpeed;
 playButton.onclick = changePlay;
 
 function prevRound() {
-  if (loadedFrames) {
+  if (hasLoadedFrames) {
     if (roundNum > 0) {
       setRoundNum(roundNum - 1);
     }
@@ -555,7 +565,7 @@ function prevRound() {
 }
 
 function nextRound() {
-  if (loadedFrames) {
+  if (hasLoadedFrames) {
     if (roundNum < metadata.maxRound) {
       setRoundNum(roundNum + 1);
     }
@@ -723,7 +733,7 @@ function increaseSpeed() {
 }
 
 function changePlay() {
-  if (loadedFrames) {
+  if (hasLoadedFrames) {
     framePlaying = !framePlaying;
     if (framePlaying) {
       playButton.innerHTML = "Pause";
@@ -760,7 +770,7 @@ document.addEventListener('keyup', (e) => {
 var intervalTime = 10;
 var timeSinceUpdate = 0;
 setInterval(function() {
-  if (loadedFrames && framePlaying) {
+  if (hasLoadedFrames && framePlaying) {
     timeSinceUpdate += intervalTime;
     var frameChange = Math.trunc(timeSinceUpdate / (1000 / frameSpeed));
     for (var i = 0; i < frameChange; i++) {

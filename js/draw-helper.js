@@ -53,14 +53,30 @@ function drawCircle(x, y, radius, color) {
   return obj;
 }
 
-function drawImage(img, x, y, opacity=1) {
-  var obj = new fabric.Image(img, {
-    scaleX: 0.13, scaleY: 0.13,
-    left: y, top: x,
-    opacity: opacity,
-    originX: "center",
-    originY: "center",
-    objectCaching: false
+// function drawImage(img, x, y, opacity=1) {
+//   var obj = new fabric.Image(img, {
+//     // scaleX: 0.13, scaleY: 0.13,
+//     left: y, top: x,
+//     opacity: opacity,
+//     originX: "center",
+//     originY: "center",
+//     objectCaching: false
+//   });
+//   return obj;
+// }
+
+function drawImage(imgPath, x, y, imgWidth, imgHeight, callback) {
+
+  fabric.Image.fromURL(imgPath, function(img) {
+    img.set({
+      scaleX: imgWidth / img.width, scaleY: imgHeight / img.height,
+      left: y, top: x,
+      originX: "center",
+      originY: "center",
+      objectCaching: false
+    });
+
+    callback(img);
   });
-  return obj;
+
 }
