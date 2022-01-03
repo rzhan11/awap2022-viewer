@@ -34,6 +34,7 @@ var unitDivs = [document.getElementById("p1-unit-div"), document.getElementById(
 
 
 // tooltip elements
+var tooltipDiv = document.getElementById("tooltip-div");
 var tooltipPosText = document.getElementById("tooltip-pos-text");
 var tooltipPassText = document.getElementById("tooltip-pass-text");
 var tooltipPopText = document.getElementById("tooltip-pop-text");

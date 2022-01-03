@@ -1,21 +1,5 @@
 "use strict";
 
-function updateTooltip(e) {
-  var pointer = e.absolutePointer;
-
-  var adjust = outerPadding - innerPadding / 2;
-  // order is supposed to be 'swapped'
-  var ty = Math.floor( (pointer.x - adjust) / fullTileSize );
-  var tx = Math.floor( (pointer.y - adjust) / fullTileSize );
-
-  tooltipObject.left = (ty + 0.5) * fullTileSize + adjust;
-  tooltipObject.top = (tx + 0.5) * fullTileSize + adjust;
-
-  displayTooltipInfo(tx, ty);
-
-  frontCanvas.requestRenderAll();
-}
-
 function getCanvasDim(canvasID) {
   var w = document.getElementById(canvasID).parentElement.parentElement.clientWidth;
   var h = document.getElementById(canvasID).parentElement.parentElement.clientHeight;
@@ -99,12 +83,13 @@ function syncCanvasMotion() {
 }
 
 const passCanvas = initCanvas("pass-canvas");
+const highlightCanvas = initCanvas("highlight-canvas");
 const iconCanvas = initCanvas("icon-canvas");
 const shadeCanvas = initCanvas("shade-canvas");
 const popCanvas = initCanvas("pop-canvas");
 const tooltipCanvas = initCanvas("tooltip-canvas");
 
-var allCanvases = [passCanvas, iconCanvas, shadeCanvas, popCanvas, tooltipCanvas];
+var allCanvases = [passCanvas, highlightCanvas, iconCanvas, shadeCanvas, popCanvas, tooltipCanvas];
 var frontCanvas = tooltipCanvas;
 
 syncCanvasMotion();
@@ -137,9 +122,24 @@ var tooltipObject;
 var towerCoverObject;
 
 function tile2Pixels(tx, ty) {
+  // flip vertically
+  var ty = frameHeight - 1 - ty;
+
   var px = outerPadding + tx * innerPadding + (tx + 0.5) * tileSize;
   var py = outerPadding + ty * innerPadding + (ty + 0.5) * tileSize;
   return [px, py];
+}
+
+
+function pixels2Tile(px, py) {
+  var adjust = outerPadding - innerPadding / 2;
+  // order is supposed to be 'swapped'
+  var tx = Math.floor( (px - adjust) / fullTileSize );
+  var ty = Math.floor( (py - adjust) / fullTileSize );
+  // flip vertically
+  var ty = frameHeight - 1 - ty;
+
+  return [tx, ty];
 }
 
 function initCanvasObjects() {
@@ -153,10 +153,9 @@ function initCanvasObjects() {
   // tiles
   for (var i = 0; i < frameHeight; i++) {
     for (var j = 0; j < frameWidth; j++) {
-      var x = outerPadding + i * innerPadding + (i + 0.5) * tileSize;
-      var y = outerPadding + j * innerPadding + (j + 0.5) * tileSize;
+      var p = tile2Pixels(i, j);
       var color = getPassColor(passMap[i][j]);
-      passGrid[i][j] = drawRect(x, y, tileSize, tileSize, color);
+      passGrid[i][j] = drawRect(p[0], p[1], tileSize, tileSize, color);
     }
   }
 
@@ -299,8 +298,8 @@ function getPassColor(passability) {
   return rgb(color[0], color[1], color[2]);
 }
 
-function getUnitInfo(team_id, struct_id) {
-  return { type: structID2Name[struct_id], team: team2Text[team_id], color: team2Color[team_id], team_id: team_id }
+function getUnitInfo(team_id, struct_id, spawn_round) {
+  return { type: structID2Name[struct_id], team: team2Text[team_id], color: team2Color[team_id], team_id: team_id, spawn_round: spawn_round }
 }
 
 function setIcon(i, j) {
@@ -318,7 +317,6 @@ function setIcon(i, j) {
     // icon
     var textSymbol = unit.type[0];
     if (unit.type == "Road") {
-      console.log("here", i, j)
       textSymbol = ".";
       // show text
       textGrid[i][j].set("fill", unit.color);
@@ -326,13 +324,27 @@ function setIcon(i, j) {
       textGrid[i][j].set("visible", true);
       iconCanvas.add(textGrid[i][j]);
     } else {
-      console.log("herex", i, j)
       setIconImage(i, j);
     }
 
   }
 
   // iconGrid[i][j].set("visible", true)
+}
+
+function highlightNewSpawns(targetRound) {
+  highlightCanvas.clear();
+  if (targetRound == 0) {
+    return;
+  }
+  for (var structure of frameChanges[targetRound - 1]) {
+    var [x, y, team_id, type_id] = structure;
+    var unit = getUnitInfo(team_id, type_id, targetRound);
+    var p = tile2Pixels(x, y);
+    var r = drawRect(p[0], p[1], highlightTileSize, highlightTileSize, unit.color, highlightOpacity);
+    highlightCanvas.add(r);
+  }
+  highlightCanvas.requestRenderAll();
 }
 
 function setIconImage(i, j) {
@@ -479,7 +491,7 @@ function loadData(data) {
   curFrame = init2DArray(frameWidth, frameHeight);
   for (var t = 0; t < generatorData.length; t++) {
     for (var el of generatorData[t]) {
-      curFrame[el[0]][el[1]] = getUnitInfo(t, structName2ID["Generator"]);
+      curFrame[el[0]][el[1]] = getUnitInfo(t, structName2ID["Generator"], 0);
     }
   }
 
@@ -534,7 +546,7 @@ function calculateUnitStats() {
   for (var fnum = 0; fnum < numFrameChanges; fnum++) {
     for (var structure of frameChanges[fnum]) {
       var [x, y, team_id, type_id] = structure;
-      var unit = getUnitInfo(team_id, type_id);
+      var unit = getUnitInfo(team_id, type_id, fnum + 1);
       curUnitCount[team_id][unit.type] += 1;
     }
     unitCounts.push(JSON.parse(JSON.stringify(curUnitCount)));
@@ -548,8 +560,8 @@ function displayMetadata() {
   metadataText.innerHTML += "Engine Version: " + metadata.version;
 };
 
-prevRoundButton.onclick = prevRound;
-nextRoundButton.onclick = nextRound;
+prevRoundButton.onclick = stepPrevRound;
+nextRoundButton.onclick = stepNextRound;
 
 slowerSpeedButton.onclick = decreaseSpeed;
 fasterSpeedButton.onclick = increaseSpeed;
@@ -572,15 +584,32 @@ function nextRound() {
   }
 }
 
+function stepPrevRound() {
+  if (framePlaying) {
+    changePlay();
+  }
+  prevRound();
+}
+
+function stepNextRound() {
+  if (framePlaying) {
+    changePlay();
+  }
+  nextRound();
+}
+
 function getNewFrame(targetRound, oldRoundNum) {
   for (var fnum = oldRoundNum; fnum < targetRound; fnum++) {
     for (var structure of frameChanges[fnum]) {
       var [x, y, team_id, type_id] = structure;
-      curFrame[x][y] = getUnitInfo(team_id, type_id);
+      curFrame[x][y] = getUnitInfo(team_id, type_id, fnum + 1);
 
       setIcon(x, y);
     }
   }
+
+  // highlight newly spawned icons
+  highlightNewSpawns(targetRound);
 
   renderFrame();
 }
@@ -615,11 +644,8 @@ function displayGameInfo() {
   // display game info text
   for (var t = 0; t < 2; t++) {
     // update charts
-    moneyChart.data.datasets[t].label = moneyHistory[roundNum][t];
     moneyChart.data.datasets[t].data[0] = moneyHistory[roundNum][t];
     moneyChart.update()
-    utilityChart.data.datasets[0].data[t] = utilityHistory[roundNum][t]
-    utilityChart.update()
 
     unitDivs[t].innerHTML = "";
     unitDivs[t].style.color = team2Color[t];
@@ -638,7 +664,6 @@ function displayGameInfo() {
   }
 
   for (var t = 0; t < 2; t++) {
-    moneyLineChart.data.datasets[t].label = moneyHistory[roundNum][t];
     utilityLineChart.data.datasets[t].label = utilityHistory[roundNum][t];
   }
 
@@ -652,15 +677,24 @@ function displayGameInfo() {
     roundLabels[i] = (leftRange + i).toString();
   }
 
-  moneyLineChart.data.datasets[0].data = redMoneyHistory.slice(leftRange, rightRange);
-  moneyLineChart.data.datasets[1].data = blueMoneyHistory.slice(leftRange, rightRange);
-  moneyLineChart.data.labels = roundLabels;
-  moneyLineChart.update();
-
   utilityLineChart.data.datasets[0].data = redUtilityHistory.slice(leftRange, rightRange);
   utilityLineChart.data.datasets[1].data = blueUtilityHistory.slice(leftRange, rightRange);
   utilityLineChart.data.labels = roundLabels;
   utilityLineChart.update();
+}
+
+function updateTooltip(e) {
+  var pointer = e.absolutePointer;
+
+  var tloc = pixels2Tile(pointer.x, pointer.y);
+  var p = tile2Pixels(tloc[0], tloc[1]);
+
+  tooltipObject.left = p[0];
+  tooltipObject.top = p[1];
+
+  displayTooltipInfo(tloc[0], tloc[1]);
+
+  frontCanvas.requestRenderAll();
 }
 
 var curTooltipPos;
@@ -680,10 +714,26 @@ function displayTooltipInfo(x, y) {
 
   curTooltipPos = [x, y];
 
+  // tooltip div
+  tooltipDiv.hidden = false;
+  if (y < frameHeight / 2) { // lower half
+    console.log("up");
+    tooltipDiv.style.top = `${100}px`;
+    tooltipDiv.style.left = `${100}px`;
+  } else {
+    console.log("down");
+    var tooltipDivHeight = tooltipDiv.getBoundingClientRect().height;
+    console.log("a", tooltipDivHeight)
+    tooltipDiv.style.top = `${frontCanvas.height - 100 - tooltipDivHeight}px`;
+    tooltipDiv.style.left = `${100}px`;
+  }
+  console.log(tooltipDiv.style.top);
+
+  // tooltip text
   tooltipPosText.innerHTML = [x, y];
   tooltipPassText.innerHTML = passMap[x][y];
   tooltipPopText.innerHTML = popMap[x][y];
-
+  // set unit text
   if (curFrame[x][y] == null) {
     tooltipStructText.innerHTML = "";
     tooltipStructText.style.color = BLACK;
@@ -703,14 +753,16 @@ function displayTowerRadius(x, y) {
   towerCoverObject.set("visible", true);
 
   var p = tile2Pixels(x, y);
-  towerCoverObject.set("left", p[1]);
-  towerCoverObject.set("top", p[0]);
+  towerCoverObject.set("left", p[0]);
+  towerCoverObject.set("top", p[1]);
 }
 
 function clearTooltipInfo() {
   curTooltipPos = null;
 
   tooltipObject.set("visible", false);
+
+  tooltipDiv.hidden = true;
 
   tooltipPosText.innerHTML = "";
   tooltipPassText.innerHTML = "";
@@ -745,16 +797,10 @@ function changePlay() {
 
 document.addEventListener('keyup', (e) => {
   if (e.code === "ArrowLeft" || e.key == "a") {
-    if (framePlaying) {
-      changePlay();
-    }
-    prevRound();
+    stepPrevRound();
   }
   if (e.code === "ArrowRight" || e.key == "d") {
-    if (framePlaying) {
-      changePlay();
-    }
-    nextRound();
+    stepNextRound();
   }
   if (e.code === "ArrowDown" || e.key == "s") {
     decreaseSpeed();

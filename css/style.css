@@ -11,15 +11,26 @@ canvas {
   left: 0;
 }
 
+.sync-canvas .hover-div {
+  position: absolute !important;
+  top: 100px;
+  left: 100px;
+  display: block;
+  z-index:9999;
+
+  background-color: rgb(200, 200, 200);
+  padding: 10px;
+}
+
 input[type="file"] {
     display: none;
 }
 
 .side-panel {
-    padding-top: 40px;
-    background-color: rgb(200, 200, 200);
-    z-index: 10;
-    height: 100vh;
+  padding-top: 40px;
+  background-color: rgb(200, 200, 200);
+  z-index: 10;
+  height: 100vh;
 }
 
 /* Clear floats after the columns */

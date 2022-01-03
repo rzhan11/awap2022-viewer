@@ -20,10 +20,14 @@ var edgeWidth = 5;
 // calculated tile pixel constants
 var fullTileSize = tileSize + innerPadding;
 
-// icon tile pixel constants
+// tooltip tile pixel constants
 var shadeTileSize = fullTileSize;
 var shadeEdgeWidth = 2;
 var shadeOpacity = 1;
+
+// tooltip tile pixel constants
+var highlightTileSize = tileSize;
+var highlightOpacity = 0.5;
 
 // tooltip pixel constants
 var tooltipSize = fullTileSize;

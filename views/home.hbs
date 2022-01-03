@@ -37,11 +37,19 @@
 	<div class="container-fluid">
 		<div class="row row-content">
 			<div class="col-8 sync-canvas">
-				  <canvas id="pass-canvas" width="100" height="100" style="z-index: 0;"></canvas>
-					<canvas id="icon-canvas" width="100" height="100" style="z-index: 1;"></canvas>
-					<canvas id="shade-canvas" width="100" height="100" style="z-index: 2;"></canvas>
-					<canvas id="pop-canvas" width="100" height="100" style="z-index: 3;"></canvas>
-				  <canvas id="tooltip-canvas" width="100" height="100" style="z-index: 4;"></canvas>
+					<div class="hover-div" id="tooltip-div" hidden=true>
+							<p> Hover over a tile to see its details!</p>
+							<p> Position: <span id="tooltip-pos-text"></span> </p>
+							<p> Passability: <span id="tooltip-pass-text"></span> </p>
+							<p> Population: <span id="tooltip-pop-text"></span> </p>
+							<p> Structure: <span id="tooltip-struct-text"></span> </p>
+			    </div>
+					<canvas id="pass-canvas" width="100" height="100" style="z-index: 0;"></canvas>
+				  <canvas id="highlight-canvas" width="100" height="100" style="z-index: 1;"></canvas>
+					<canvas id="icon-canvas" width="100" height="100" style="z-index: 2;"></canvas>
+					<canvas id="shade-canvas" width="100" height="100" style="z-index: 3;"></canvas>
+					<canvas id="pop-canvas" width="100" height="100" style="z-index: 4;"></canvas>
+				  <canvas id="tooltip-canvas" width="100" height="100" style="z-index: 5;"></canvas>
 				<!-- <canvas class="board" id="map-canvas" height="0" width="0"></canvas> -->
 			</div>
 			<div class="col-4 side-panel">
@@ -125,19 +133,6 @@
 					</div>
 				</div>
 
-
-				<div class="row row-content">
-					<div class="col">
-						<div class="game-info">
-						<p> Hover over a tile to see its details!</p>
-						<p> Position: <span id="tooltip-pos-text"></span> </p>
-						<p> Passability: <span id="tooltip-pass-text"></span> </p>
-						<p> Population: <span id="tooltip-pop-text"></span> </p>
-						<p> Structure: <span id="tooltip-struct-text"></span> </p>
-						</div>
-					</div>
-
-				</div>
 
 				<div class="row row-content">
 					<div class="col">
