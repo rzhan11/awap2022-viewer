@@ -33,6 +33,10 @@ var highlightOpacity = 0.5;
 var tooltipSize = fullTileSize;
 var tooltipEdgeWidth = 3;
 
+// tooltip div constants
+var toolTipVerticalOffset = 100;
+var toolTipHorizontalOffset = 100;
+
 
 // canvas constants
 var maxZoom = 5;

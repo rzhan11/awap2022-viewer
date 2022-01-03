@@ -717,17 +717,13 @@ function displayTooltipInfo(x, y) {
   // tooltip div
   tooltipDiv.hidden = false;
   if (y < frameHeight / 2) { // lower half
-    console.log("up");
-    tooltipDiv.style.top = `${100}px`;
-    tooltipDiv.style.left = `${100}px`;
+    tooltipDiv.style.top = `${toolTipVerticalOffset}px`;
+    tooltipDiv.style.left = `${toolTipHorizontalOffset}px`;
   } else {
-    console.log("down");
     var tooltipDivHeight = tooltipDiv.getBoundingClientRect().height;
-    console.log("a", tooltipDivHeight)
-    tooltipDiv.style.top = `${frontCanvas.height - 100 - tooltipDivHeight}px`;
-    tooltipDiv.style.left = `${100}px`;
+    tooltipDiv.style.top = `${frontCanvas.height - toolTipVerticalOffset - tooltipDivHeight}px`;
+    tooltipDiv.style.left = `${toolTipHorizontalOffset}px`;
   }
-  console.log(tooltipDiv.style.top);
 
   // tooltip text
   tooltipPosText.innerHTML = [x, y];
