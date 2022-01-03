@@ -377,6 +377,7 @@ var structureMap;
 
 var moneyHistory;
 var utilityHistory;
+var bidHistory;
 
 var redMoneyHistory;
 var blueMoneyHistory;
@@ -453,6 +454,8 @@ function loadData(data) {
   for (var i = 0; i < utilityHistory.length; i++) {
     blueUtilityHistory[i] = utilityHistory[i][1];
   }
+
+  bidHistory = obj["bid_history"];
 
   structName2ID = {};
   structID2Name = {};
@@ -663,6 +666,7 @@ Updates visual menu box of game stats
 - money, utility, number of units
 */
 function displayGameInfo() {
+  console.log(numFrameChanges, bidHistory[roundNum]);
 
   // display game info text
   for (var t = 0; t < 2; t++) {
@@ -673,8 +677,6 @@ function displayGameInfo() {
     unitCountDivs[t].innerHTML = "";
     unitCountDivs[t].style.color = team2Color[t];
     for (var unit in unitCounts[roundNum][t]) {
-      // console.log(unit);
-      // console.log(unitCounts[roundNum][t]);
       var count = unitCounts[roundNum][t][unit];
 
       unitCountDivs[t].innerHTML += `
@@ -682,6 +684,18 @@ function displayGameInfo() {
         ${count}
       </div>
       `;
+    }
+
+    // display bids
+    bidTexts[t].innerHTML = bidHistory[roundNum][t];
+    // bid winner
+    if (bidHistory[roundNum][2] == t) {
+      console.log("b" + t)
+      bidTexts[t].style.color = team2Color[t];
+      bidTexts[t].innerHTML += " (W)";
+    } else {
+      console.log("n" + t)
+      bidTexts[t].style.color = "black";
     }
   }
 
@@ -780,7 +794,7 @@ function clearTooltipInfo() {
 
   tooltipObject.set("visible", false);
 
-  tooltipDiv.hidden = true;
+  // tooltipDiv.hidden = true;
 
   tooltipPosText.innerHTML = "";
   tooltipPassText.innerHTML = "";

@@ -46,3 +46,5 @@ var tooltipPosText = document.getElementById("tooltip-pos-text");
 var tooltipPassText = document.getElementById("tooltip-pass-text");
 var tooltipPopText = document.getElementById("tooltip-pop-text");
 var tooltipStructText = document.getElementById("tooltip-struct-text");
+
+var bidTexts = [document.getElementById("p1-bid-text"), document.getElementById("p2-bid-text")];
