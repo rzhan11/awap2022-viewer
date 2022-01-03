@@ -29,7 +29,8 @@ var playButton = document.getElementById("play-button");
 
 var frameRange = document.getElementById("frame-range");
 
-var unitDivs = [document.getElementById("p1-unit-div"), document.getElementById("p2-unit-div")];
+var unitLabelDivs = [document.getElementById("p1-unit-label-div"), document.getElementById("p2-unit-label-div")];
+var unitCountDivs = [document.getElementById("p1-unit-count-div"), document.getElementById("p2-unit-count-div")];
 // var gameInfoText = document.getElementById("game-info-text");
 
 

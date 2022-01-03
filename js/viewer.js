@@ -347,13 +347,17 @@ function highlightNewSpawns(targetRound) {
   highlightCanvas.requestRenderAll();
 }
 
+function unit2ImagePath(unit) {
+  return `../img/${(unit.team + unit.type).toLowerCase()}.png`;
+}
+
 function setIconImage(i, j) {
   var unit = curFrame[i][j];
   // iconGrid[i][j].setSrc(`../img/${(unit.team + unit.type).toLowerCase()}.png`, function (image) {
   //   iconCanvas.renderAll();
   // });
   var p = tile2Pixels(i, j);
-  drawImage(`../img/${(unit.team + unit.type).toLowerCase()}.png`, p[0], p[1], iconSize, iconSize,
+  drawImage(unit2ImagePath(unit), p[0], p[1], iconSize, iconSize,
   function (img) {
     iconCanvas.add(img);
     iconCanvas.requestRenderAll();
@@ -515,6 +519,7 @@ function loadData(data) {
   calculateUnitStats();
 
   // update screen
+  initUnitLabels();
   displayMetadata();
   initCanvasObjects();
 
@@ -630,11 +635,30 @@ function setRoundNum(num) {
   // calculate frame
   getNewFrame(roundNum, oldRoundNum);
 
-  displayMetadata();
-
   displayGameInfo();
 }
 
+
+function initUnitLabels() {
+  // init unit label divs
+  for (var t = 0; t < 2; t++) {
+    unitLabelDivs[t].innerHTML = "";
+    for (var u_id in structID2Name) {
+      var iconHTML;
+      var exampleUnit = getUnitInfo(t, u_id, 0)
+      if (structID2Name[u_id] == "Road") {
+        iconHTML = ".";
+      } else {
+        iconHTML = `<img src="${unit2ImagePath(exampleUnit)}">`;
+      }
+
+      unitLabelDivs[t].innerHTML += `
+      <div class="col" align="center">
+        ${iconHTML}
+      </div>`
+    }
+  }
+}
 /*
 Updates visual menu box of game stats
 - money, utility, number of units
@@ -647,16 +671,15 @@ function displayGameInfo() {
     moneyChart.data.datasets[t].data[0] = moneyHistory[roundNum][t];
     moneyChart.update()
 
-    unitDivs[t].innerHTML = "";
-    unitDivs[t].style.color = team2Color[t];
+    unitCountDivs[t].innerHTML = "";
+    unitCountDivs[t].style.color = team2Color[t];
     for (var unit in unitCounts[roundNum][t]) {
       // console.log(unit);
       // console.log(unitCounts[roundNum][t]);
       var count = unitCounts[roundNum][t][unit];
-      unitDivs[t].innerHTML += `
+
+      unitCountDivs[t].innerHTML += `
       <div class="col" align="center">
-        ${unit[0]}
-        <br>
         ${count}
       </div>
       `;
