@@ -644,13 +644,12 @@ function initUnitLabels() {
   for (var t = 0; t < 2; t++) {
     unitLabelDivs[t].innerHTML = "";
     for (var u_id in structID2Name) {
-      var iconHTML;
       var exampleUnit = getUnitInfo(t, u_id, 0)
-      if (structID2Name[u_id] == "Road") {
-        iconHTML = ".";
-      } else {
-        iconHTML = `<img src="${unit2ImagePath(exampleUnit)}">`;
-      }
+      var iconHTML = `<img src="${unit2ImagePath(exampleUnit)}">`;
+      // if (structID2Name[u_id] == "Road") {
+      //   iconHTML = ".";
+      // } else {
+      // }
 
       unitLabelDivs[t].innerHTML += `
       <div class="col" align="center">

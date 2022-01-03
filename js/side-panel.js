@@ -1,6 +1,12 @@
 $(document).ready(function() {
   $("#help-modal-button").click(function() {
-    $("#helpModal").modal();
+    $("#help-modal").modal();
+  });
+});
+
+$(document).ready(function() {
+  $("#metadata-modal-button").click(function() {
+    $("#metadata-modal").modal();
   });
 });
 
