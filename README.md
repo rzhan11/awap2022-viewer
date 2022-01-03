@@ -2,6 +2,10 @@
 
 Viewer for AWAP 2022 replay files
 
+## Requirements:
+1. Download [Node](https://nodejs.org/en/download/)
+2. Web browser - Chrome (preferred)
+
 ## How-to:
 1. Clone this repo
 2. `cd` into this repo
