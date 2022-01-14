@@ -28,9 +28,9 @@ input[type="file"] {
 
 .side-panel {
   padding-top: 40px;
-  background-color: rgb(200, 200, 200);
+  background-color: rgb(225, 225, 225);
   z-index: 10;
-  height: 102vh;
+  height: 105vh;
 }
 
 /* Clear floats after the columns */
@@ -100,7 +100,7 @@ input[type=range] {
   -webkit-appearance: none;
   margin: 10px 0;
   width: 100%;
-  background: rgb(200, 200, 200);
+  background: rgb(225, 225, 225);
 }
 input[type=range]:focus {
   outline: none;
