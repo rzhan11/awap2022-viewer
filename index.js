@@ -27,6 +27,12 @@ app.get('/', function(req, res){
     });
 });
 
+app.get('/help', function(req, res){
+    console.log("help anon()");
+    res.render("help", {
+    });
+});
+
 // -------------- listener -------------- //
 // The listener is what keeps node 'alive.'
 

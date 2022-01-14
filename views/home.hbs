@@ -65,51 +65,54 @@
 			<div class="col-4 side-panel">
 
 				<!-- <div class="row row-content"> -->
-					<h1>Wifi Rumble Viewer <a class="btn btn-social-icon btn-github" href="https://github.com/rzhan11/cell-towers-viewer.git"><i class="fa fa-github"></i></a></h1>
-					<hr />
+				<div class="row row-content">
+					<div class="col text-center">
+						<h1 style="font-size: 42px; font-weight: bold; font-style: normal;">Wifi Rumble Viewer</h1>
+					</div>
+				</div>
 				<!-- </div> -->
 
-				<div class="row row-content">
-					<div class="col-7">
-						<label class="btn btn-primary btn-sm same-line">
+				<div class="row row-content justify-content-center">
+					<div class="col-7 text-center">
+						<label class="btn btn-secondary btn-sm same-line roboto-font" style="width: 150px; align-items: center; font-size: 16px;">
 						    <input type="file" id="file-input"/>
 						    <i></i> Upload Replay File
 						</label>
-						<button class="btn btn-primary btn-sm same-line" id="help-modal-button">Help</button>
-						<button class="btn btn-primary btn-sm same-line" id="metadata-modal-button">Metadata</button>
-					</div>
-
-					<div class="col-5">
-						<div class="row row-content">
-							<div class="col align-self-center">
-								<p class='no-margin'>Round: <span id="round-text">0 / 0</span> </p>
-							</div>
-						</div>
 					</div>
 				</div>
 
 				<div class="row row-content">
-
-					<div class="col-7">
-								<button id="slower-speed-button" class="btn btn-primary btn-sm same-line control-button">&lt;&lt;</button>
-								<button id="prev-round-button" class="btn btn-primary btn-sm same-line control-button">&lt;</button>
-								<button id="play-button" class="btn btn-primary btn-sm same-line" style="width: 60px;">Play</button>
-								<button id="next-round-button" class="btn btn-primary btn-sm same-line control-button">&gt;</button>
-								<button id="faster-speed-button" class="btn btn-primary btn-sm same-line control-button">&gt;&gt;</button>
-					</div>
-
-					<div class="col-5">
-						<p class='no-margin'>Speed: <span id="speed-text">0</span></p>
-					</div>
-				</div>
-
-				<div class="row row-content">
-					<div class="col align-self-center">
+					<div class="col align-self-center text-center">
 						<div class="slidecontainer">
-							<input type="range" min="1" max="1" value="0" class="slider" id="frame-range" style="width: calc(100% - 40px); max-width: 100%">
+							<input type="range" min="1" max="1" value="0" class="slider" id="frame-range" style="width: calc(100% - 40px); max-width: 100%;">
 						</div>
 					</div>
 				</div>
+
+				<div class="row row-content">
+					<div class="col text-center">
+						<p class='no-margin roboto-font font-size: 15px;'>Round: <span id="round-text">0 / 0</span> </p>
+					</div>
+				</div>
+
+				<div class="row row-content">
+						<div class="col text-center">
+								<button id="prev-round-button" class="btn btn-blue btn-sm same-line control-button">&lt;</button>
+								<div class="divider-sm"></div>
+								<button id="play-button" class="btn btn-blue btn-sm same-line roboto-font" style="width: 70px;">Play</button>
+								<div class="divider-sm"></div>
+								<button id="next-round-button" class="btn btn-blue btn-sm same-line control-button">&gt;</button>
+						</div>
+
+						<div class="col text-center">
+								<button id="slower-speed-button" class="btn btn-blue btn-sm same-line control-button">&lt;</button>
+								<div class="divider-lg"></div>
+								<p class='no-margin roboto-font' style="display: inline-block; line-height:35px; font-size: 16px;" >Speed: <span id="speed-text">0</span></p>
+								<div class="divider-lg"></div>
+								<button id="faster-speed-button" class="btn btn-blue btn-sm same-line control-button">&gt;</button>
+						</div>
+				</div>
+
 
 				<!-- <div class="row row-content"> -->
 				<!-- </div> -->
@@ -119,36 +122,34 @@
 
 				<div class="row row-content">
 					<div class="col-6">
-						<div class="game-info"> <canvas id="money-chart" width="300" height="200"></canvas> </div>
+						<div class="game-info"> <canvas id="money-chart" width="153px" height="133px"></canvas> </div>
 					</div>
 
 					<div class="col">
-						<div class="game-info">
-							<div class="row" id="p1-unit-label-div"> </div>
-							<div class="row" id="p1-unit-count-div"> </div>
-							<div class="row" id="p2-unit-label-div"> </div>
-							<div class="row" id="p2-unit-count-div"> </div>
+						<div class="game-info" id="tooltip-div" style="height: 235px;">
+							<p> P1 Bid: <span id="p1-bid-text"></span> </p>
+							<p> P2 Bid: <span id="p2-bid-text"></span> </p>
 						</div>
 					</div>
 				</div>
 
 				<div class="col-6">
-					<div class="game-info" hidden=true> <canvas id="utility-chart" width="300" height="200"></canvas> </div>
+					<div class="game-info" hidden=true style="background: rgb(200, 200, 200);"> <canvas id="utility-chart" width="317px" height="153px"></canvas> </div>
 				</div>
 
 				<div class="row row-content">
 					<div class="col">
-						<div class="game-info" hidden=true> <canvas id="money-line" width="100" height="35"></canvas> </div>
+						<div class="game-info" hidden=true> <canvas id="money-line" width="317" height="76"></canvas> </div>
 					</div>
 				</div>
 				<div class="row row-content">
 					<div class="col">
-						<div class="game-info"> <canvas id="utility-line" width="100" height="35"></canvas> </div>
+						<div class="game-info"> <canvas id="utility-line" width="75" height="26"></canvas> </div>
 					</div>
 				</div>
 
 				<div class="row row-content">
-					<div class="col">
+					<!-- <div class="col">
 						<div class="game-info" id="tooltip-div">
 							<p>
 								Hover over tile for details! <br>
@@ -158,14 +159,28 @@
 								Structure: <span id="tooltip-struct-text"></span>
 							</p>
 						</div>
-					</div>
-						<div class="col">
-							<div class="game-info" id="tooltip-div">
-								<p> P1 Bid: <span id="p1-bid-text"></span> </p>
-								<p> P2 Bid: <span id="p2-bid-text"></span> </p>
-							</div>
+					</div> -->
+
+					<div class="col">
+						<div class="game-info">
+							<div class="row" id="p1-unit-label-div"> </div>
+							<div class="row" id="p1-unit-count-div"> </div>
+							<div class="row" id="p2-unit-label-div"> </div>
+							<div class="row" id="p2-unit-count-div"> </div>
 						</div>
+					</div>
 		    </div>
+
+				<div class="row row-content">
+					<div class="col text-center">
+						<img src="img/wifi_awap.png" alt="Icon not loaded" width="90" height="30" style="position: relative; top: 5px;">
+						<div class="divider-sm"></div>
+						<a class="btn btn-social-icon btn-github" style="width: 30px; height: 30px;" href="https://github.com/rzhan11/cell-towers-viewer.git"><i class="fa fa-github"></i></a>
+						<div class="divider-sm"></div>
+						<button class="btn btn-secondary btn-sm same-line" id="help-modal-button" style="width: 55px; height: 27px;">Help</button>
+						<!-- <button class="btn btn-secondary btn-sm same-line" id="metadata-modal-button">Metadata</button> -->
+					</div>
+				</div>
 
 
 				<br>
