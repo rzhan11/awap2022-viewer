@@ -22,14 +22,20 @@ app.use("/img", express.static(path.join(__dirname, 'img')));
 app.use("/node_modules", express.static(__dirname + "/node_modules"));
 
 app.get('/', function(req, res){
-    console.log("home anon()");
-    res.render("home", {
+    console.log("viewer anon()");
+    res.render("viewer", {
     });
 });
 
 app.get('/help', function(req, res){
     console.log("help anon()");
     res.render("help", {
+    });
+});
+
+app.get('/mapmaker', function(req, res){
+    console.log("mapmaker anon()");
+    res.render("mapmaker", {
     });
 });
 

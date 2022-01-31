@@ -2,7 +2,7 @@
 
 function getCanvasDim(canvasID) {
   var w = document.getElementById(canvasID).parentElement.parentElement.clientWidth;
-  var h = document.getElementById(canvasID).parentElement.parentElement.clientHeight;
+  var h = window.innerHeight;
   return [w, h];
 }
 
@@ -143,11 +143,10 @@ function pixels2Tile(px, py) {
 }
 
 function initCanvasObjects() {
-  passGrid = init2DArray(frameWidth, frameHeight);
-  popGrid = init2DArray(frameWidth, frameHeight);
-  textGrid = init2DArray(frameWidth, frameHeight);
-  // iconGrid = init2DArray(frameWidth, frameHeight);
-  shadeGrid = init2DArray(frameWidth, frameHeight);
+  passGrid = init2DArray(frameWidth, frameHeight, null);
+  popGrid = init2DArray(frameWidth, frameHeight, null);
+  textGrid = init2DArray(frameWidth, frameHeight, null);
+  shadeGrid = init2DArray(frameWidth, frameHeight, null);
 
 
   // tiles
@@ -203,8 +202,8 @@ function initCanvasObjects() {
     for (var j = 0; j < frameHeight; j++) {
       var p = tile2Pixels(i, j);
 
-      var radius = popMap[i][j] * tileSize / 40;
-      popGrid[i][j] = drawCircle(p[0], p[1], radius, GREEN);
+      var radius = getPopRadius(popMap[i][j]);
+      popGrid[i][j] = drawCircle(p[0], p[1], radius, GREEN, popCircleOpacity);
     }
   }
 
@@ -246,11 +245,13 @@ function initCanvasObjects() {
   for (var canvas of allCanvases) {
     var vpt = canvas.viewportTransform;
     // initial pan
-    vpt[4] = canvas.width / 2 - mapWidthPixelSize / 2;
-    vpt[5] = canvas.height / 2 - mapHeightPixelSize / 2;
+
+    vpt[4] = (canvas.width / 2 - mapWidthPixelSize / 2);
+    vpt[5] = (canvas.height / 2 - mapHeightPixelSize / 2);
     var initZoom = zoomRatio * Math.min(canvas.width / mapWidthPixelSize, canvas.height / mapHeightPixelSize);
     // initial zoom
-    canvas.zoomToPoint({ x: canvas.width / 2, y: canvas.height / 2 }, initZoom);
+    // canvas.zoomToPoint({ x: canvas.width / vpt[0], y: canvas.height / vpt[3] }, 1);
+    canvas.zoomToPoint({ x: canvas.width / 2 , y: canvas.height / 2 }, initZoom);
     canvas.requestRenderAll();
   }
 
@@ -271,32 +272,6 @@ function resetInitFrame() {
       setIcon(i, j);
     }
   }
-}
-
-function getPassColor(passability) {
-  var relPass = (passability - GC.MIN_PASS) / (GC.MAX_PASS - GC.MIN_PASS);
-  if (relPass <= 0.05) {
-    relPass = 0.05;
-  }
-  if (relPass == 1) {
-    relPass -= 0.00001;
-  }
-
-
-  var colorIndex = Math.floor(relPass * (colorGrad.length - 1));
-  var colorWeight = relPass * (colorGrad.length - 1) - colorIndex;
-
-  var color1 = colorGrad[colorIndex];
-  var color2 = colorGrad[colorIndex + 1];
-
-  var color = [0, 0, 0];
-  for (var i = 0; i < color.length; i++) {
-    color[i] = color1[i] * (1 - colorWeight) + color2[i] * colorWeight;
-  }
-
-  // console.log(colorIndex, colorWeight, color)
-
-  return rgb(color[0], color[1], color[2]);
 }
 
 function getUnitInfo(team_id, struct_id, spawn_round) {
@@ -474,21 +449,21 @@ function loadData(data) {
   frameWidth = mapData.length;
   frameHeight = mapData[0].length;
 
-  passMap = init2DArray(frameWidth, frameHeight);
+  passMap = init2DArray(frameWidth, frameHeight, 1);
   for (var i = 0; i < frameWidth; i++) {
     for (var j = 0; j < frameHeight; j++) {
       passMap[i][j] = mapData[i][j][0];
     }
   }
 
-  popMap = init2DArray(frameWidth, frameHeight);
+  popMap = init2DArray(frameWidth, frameHeight, 0);
   for (var i = 0; i < frameWidth; i++) {
     for (var j = 0; j < frameHeight; j++) {
       popMap[i][j] = mapData[i][j][1];
     }
   }
 
-  structureMap = init2DArray(frameWidth, frameHeight);
+  structureMap = init2DArray(frameWidth, frameHeight, null);
   for (var i = 0; i < frameWidth; i++) {
     for (var j = 0; j < frameHeight; j++) {
       structureMap[i][j] = mapData[i][j][2];
@@ -496,7 +471,7 @@ function loadData(data) {
   }
 
   var generatorData = obj["generators"];
-  curFrame = init2DArray(frameWidth, frameHeight);
+  curFrame = init2DArray(frameWidth, frameHeight, null);
   for (var t = 0; t < generatorData.length; t++) {
     for (var el of generatorData[t]) {
       curFrame[el[0]][el[1]] = getUnitInfo(t, structName2ID["Generator"], 0);
@@ -667,7 +642,6 @@ Updates visual menu box of game stats
 - money, utility, number of units
 */
 function displayGameInfo() {
-  console.log(numFrameChanges, bidHistory[roundNum]);
 
   // display game info text
   for (var t = 0; t < 2; t++) {
@@ -691,13 +665,12 @@ function displayGameInfo() {
     bidTexts[t].innerHTML = bidHistory[roundNum][t];
     // bid winner
     if (bidHistory[roundNum][2] == t) {
-      console.log("b" + t)
       bidTexts[t].style.color = team2Color[t];
       bidTexts[t].innerHTML += " (W)";
     } else {
-      console.log("n" + t)
       bidTexts[t].style.color = "black";
     }
+
   }
 
   for (var t = 0; t < 2; t++) {
@@ -842,7 +815,7 @@ document.addEventListener('keyup', (e) => {
   if (e.code === "ArrowUp" || e.key == "w") {
     increaseSpeed();
   }
-  if (e.code === "Space") {
+  if (e.code === "Space" || e.key == "p") {
     changePlay();
   }
 });

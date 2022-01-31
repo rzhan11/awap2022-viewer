@@ -39,13 +39,14 @@ function drawText(text, x, y, fontSize, color) {
   return obj;
 }
 
-function drawCircle(x, y, radius, color) {
+function drawCircle(x, y, radius, color, opacity=1) {
   var obj = new fabric.Circle({
     left: x, top: y,
     radius: radius,
-    fill: color,
-    stroke: BLACK,
-    strokeWidth: 0.5,
+    fill: "rgb(0, 0, 0, 0)",
+    // opacity: opacity,
+    stroke: color,
+    strokeWidth: 1.5,
     originX: "center",
     originY: "center",
     objectCaching: false
@@ -79,4 +80,44 @@ function drawImage(imgPath, x, y, imgWidth, imgHeight, callback) {
     callback(img);
   });
 
+}
+
+
+function getPopRadius(population) {
+  if (population <= 0) {
+    return 0;
+  }
+  var relPass = (population - GC.MIN_POP) / (GC.MAX_POP - GC.MIN_POP);
+  return relPass * (maxPopRadius - minPopRadius) + minPopRadius;
+}
+
+function getPassColor(passability) {
+  var maxInversePass = 1 - GC.MIN_PASS / GC.MAX_PASS;
+  var inversePass = 1 - GC.MIN_PASS / passability;
+
+  var relPass = inversePass / maxInversePass;
+  relPass = Math.pow(relPass, 3);
+  // var relPass = (passability - GC.MIN_PASS) / (GC.MAX_PASS - GC.MIN_PASS);
+  if (relPass <= 0.05) {
+    relPass = 0.05;
+  }
+  if (relPass == 1) {
+    relPass -= 0.00001;
+  }
+
+
+  var colorIndex = Math.floor(relPass * (colorGrad.length - 1));
+  var colorWeight = relPass * (colorGrad.length - 1) - colorIndex;
+
+  var color1 = colorGrad[colorIndex];
+  var color2 = colorGrad[colorIndex + 1];
+
+  var color = [0, 0, 0];
+  for (var i = 0; i < color.length; i++) {
+    color[i] = color1[i] * (1 - colorWeight) + color2[i] * colorWeight;
+  }
+
+  // console.log(colorIndex, colorWeight, color)
+
+  return rgb(color[0], color[1], color[2]);
 }

@@ -2,11 +2,11 @@ function rgb(r, g, b){
   return "rgb("+r+","+g+","+b+")";
 }
 
-function init2DArray(width, height) {
+function init2DArray(width, height, el) {
   var arr = new Array(width);
   for (var i = 0; i < width; i++) {
     arr[i] = new Array(height);
-    arr[i].fill(null);
+    arr[i].fill(el);
   }
   return arr;
 }
