@@ -151,19 +151,19 @@ function initCanvasObjects() {
 
 
   // tiles
-  for (var i = 0; i < frameHeight; i++) {
-    for (var j = 0; j < frameWidth; j++) {
+  for (var i = 0; i < frameWidth; i++) {
+    for (var j = 0; j < frameHeight; j++) {
       var p = tile2Pixels(i, j);
       var color = getPassColor(passMap[i][j]);
       passGrid[i][j] = drawRect(p[0], p[1], tileSize, tileSize, color);
     }
   }
 
-  var mapPixelSize = 2 * outerPadding + (frameWidth - 1) * innerPadding + frameWidth * tileSize;
+  var mapWidthPixelSize = 2 * outerPadding + (frameWidth - 1) * innerPadding + frameWidth * tileSize;
+  var mapHeightPixelSize = 2 * outerPadding + (frameHeight - 1) * innerPadding + frameHeight * tileSize;
   // baseObject0 for rendering issues, baseObject1 for gray border, baseObject2 for white grid lines
-  // var baseObject0 = drawRect(mapPixelSize / 2, mapPixelSize / 2, mapPixelSize + 2 * tileSize, mapPixelSize - 2 * outerPadding + 2 * tileSize, WHITE);
-  var baseObject1 = drawRect(mapPixelSize / 2, mapPixelSize / 2, mapPixelSize, mapPixelSize, DARK_GRAY);
-  var baseObject2 = drawRect(mapPixelSize / 2, mapPixelSize / 2, mapPixelSize - 2 * outerPadding, mapPixelSize - 2 * outerPadding, WHITE);
+  var baseObject1 = drawRect(mapWidthPixelSize / 2, mapHeightPixelSize / 2, mapWidthPixelSize, mapHeightPixelSize, DARK_GRAY);
+  var baseObject2 = drawRect(mapWidthPixelSize / 2, mapHeightPixelSize / 2, mapWidthPixelSize - 2 * outerPadding, mapHeightPixelSize - 2 * outerPadding, WHITE);
   var tileObjects = passGrid.flat();
   tileObjects = [baseObject1, baseObject2].concat(tileObjects);
   var tileGroup = new fabric.Group(tileObjects, {"selectable": false});
@@ -171,8 +171,8 @@ function initCanvasObjects() {
   // end of tiles
 
   // shades
-  for (var i = 0; i < frameHeight; i++) {
-    for (var j = 0; j < frameWidth; j++) {
+  for (var i = 0; i < frameWidth; i++) {
+    for (var j = 0; j < frameHeight; j++) {
       var p = tile2Pixels(i, j);
       shadeGrid[i][j] = drawBox(p[0], p[1], shadeTileSize, shadeTileSize, BLACK, shadeEdgeWidth, shadeOpacity);
       shadeGrid[i][j].set("visible", false);
@@ -186,8 +186,8 @@ function initCanvasObjects() {
 
 
   // icons
-  for (var i = 0; i < frameHeight; i++) {
-    for (var j = 0; j < frameWidth; j++) {
+  for (var i = 0; i < frameWidth; i++) {
+    for (var j = 0; j < frameHeight; j++) {
       var p = tile2Pixels(i, j);
 
       textGrid[i][j] = drawText("", p[0], p[1], 15, BLACK);
@@ -199,8 +199,8 @@ function initCanvasObjects() {
   // end of icons
 
   // population
-  for (var i = 0; i < frameHeight; i++) {
-    for (var j = 0; j < frameWidth; j++) {
+  for (var i = 0; i < frameWidth; i++) {
+    for (var j = 0; j < frameHeight; j++) {
       var p = tile2Pixels(i, j);
 
       var radius = popMap[i][j] * tileSize / 40;
@@ -242,13 +242,14 @@ function initCanvasObjects() {
   // end of tooltip
 
   // set initial pan/zoom
+  var zoomRatio = 0.95;
   for (var canvas of allCanvases) {
     var vpt = canvas.viewportTransform;
     // initial pan
-    vpt[4] = canvas.width / 2 - mapPixelSize / 2;
-    vpt[5] = canvas.height / 2 - mapPixelSize / 2;
+    vpt[4] = canvas.width / 2 - mapWidthPixelSize / 2;
+    vpt[5] = canvas.height / 2 - mapHeightPixelSize / 2;
+    var initZoom = zoomRatio * Math.min(canvas.width / mapWidthPixelSize, canvas.height / mapHeightPixelSize);
     // initial zoom
-    var initZoom = Math.min(canvas.width, canvas.height) / mapPixelSize * 0.95;
     canvas.zoomToPoint({ x: canvas.width / 2, y: canvas.height / 2 }, initZoom);
     canvas.requestRenderAll();
   }
@@ -265,8 +266,8 @@ function resetInitFrame() {
 
   iconCanvas.clear();
   // iterate through each tile and add icon/symbol for units
-  for (var i = 0; i < frameHeight; i++) {
-    for (var j = 0; j < frameWidth; j++) {
+  for (var i = 0; i < frameWidth; i++) {
+    for (var j = 0; j < frameHeight; j++) {
       setIcon(i, j);
     }
   }
@@ -827,6 +828,7 @@ function changePlay() {
   }
 }
 
+
 document.addEventListener('keyup', (e) => {
   if (e.code === "ArrowLeft" || e.key == "a") {
     stepPrevRound();
@@ -842,6 +844,13 @@ document.addEventListener('keyup', (e) => {
   }
   if (e.code === "Space") {
     changePlay();
+  }
+});
+
+// disable standard hotkey behavior (e.g. arrows moving screen around)
+document.addEventListener('keydown', (e) => {
+  if (e.code === "Space" || e.code.includes("Arrow")) {
+    e.preventDefault();
   }
 });
 
