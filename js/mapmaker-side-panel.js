@@ -1,5 +1,5 @@
 var createMapButton = document.getElementById("create-map-button");
-var saveMapButton = document.getElementById("save-map-button");
+var downloadMapButton = document.getElementById("download-map-button");
 
 var mapWidthInput = document.getElementById("map-width-input");
 var mapHeightInput = document.getElementById("map-height-input");

@@ -473,9 +473,9 @@ function clearTooltipInfo() {
 }
 
 
-function saveMap() {
+function downloadMap() {
   if (!isMapReady()) {
-    console.log("WARNING: 'saveMap' not ready")
+    console.log("WARNING: 'downloadMap' not ready")
     return;
   }
 
@@ -486,7 +486,6 @@ function saveMap() {
     for (var y = 0; y < frameHeight; y++) {
       // add tile info
       simpleMap[x][y] = [passMap[x][y], popMap[x][y]];
-      console.log(simpleMap[x][y])
 
       // add generator
       if (generatorMap[x][y] != null) {
@@ -521,4 +520,4 @@ function download(data, filename, type) {
     }, 0);
 }
 
-saveMapButton.onclick = saveMap;
+downloadMapButton.onclick = downloadMap;
