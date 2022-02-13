@@ -3,7 +3,7 @@
 Viewer for AWAP 2022 replay files
 
 ## Requirements:
-1. Download [Node](https://nodejs.org/en/download/)
+1. [Node.js](https://nodejs.org/en/download/)
 2. Web browser - Chrome (preferred)
 
 ## How-to (Viewer):
@@ -15,8 +15,4 @@ Viewer for AWAP 2022 replay files
 
 ## How-to (Mapmaker):
 1. Follow steps 1-4 from above
-5. Navigate to http://localhost:8080/mapmaker
-
-
-## Adapted from:
- https://github.com/rzhan11/battlehack2020-viewer
+2. Navigate to http://localhost:8080/mapmaker
