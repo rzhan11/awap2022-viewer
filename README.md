@@ -1,12 +1,12 @@
 # AWAP 2022 Viewer
 
-This is the viewer for AWAP 2022 game. Run matches between bots using the [game engine](https://github.com/rzhan11/cell-towers). Upload the generated replay files to this viewer to view the match.
+This is the viewer for AWAP 2022 game. Run matches between bots using the [game engine](https://github.com/rzhan11/awap2022-engine.git). Upload the generated replay files to this viewer to view the match.
 
 This also contains a mapmaker tool for the game. Competitors are encouraged to create their own custom maps to ensure that their bot works for various kinds of maps (the final competition's maps will be hidden and will not be the same as the initially given maps).
 
 To access the viewer/mapmaker without locally installing this repo, use the following links
-* [Viewer - NOT READY](FILL THIS IN)
-* [Mapmaker - NOT READY](FILL THIS IN)
+* [Viewer](http://awap2022.com:8080/viewer)
+* [Mapmaker](http://awap2022.com:8080/mapmaker)
 
 ### Requirements:
 * [Node.js](https://nodejs.org/en/download/)
@@ -15,7 +15,7 @@ To access the viewer/mapmaker without locally installing this repo, use the foll
 ## How-to:
 
 ### Download
-* `git clone https://github.com/rzhan11/cell-towers-viewer.git` - Downloads the repo
+* `git clone https://github.com/rzhan11/awap2022-viewer.git` - Downloads the repo
 * `npm install` - Run once after downloading repo (downloads necessary packages)
 
 ### Viewer
