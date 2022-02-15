@@ -22,6 +22,26 @@
 
 <body>
 
+	<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="exampleModalLabel">Init Map Confirmation</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	        Warning: Initializing a new map will erase the current map!
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">Go Back</button>
+	        <button type="button" class="btn btn-primary"  data-dismiss="modal" id="create-map-button">Continue</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
 	<div class="container-fluid">
 		<div class="row row-content">
 			<div class="col-8 sync-canvas">
@@ -35,11 +55,22 @@
 			</div>
 			<div class="col-4 side-panel">
 
+
 				<div class="row row-content">
 					<div class="col">
 						<h1 style="font-size: 42px; font-weight: bold; font-style: normal;">Wifi Rumble Mapmaker</h1>
 					</div>
 				</div>
+
+				<div class="row row-content justify-content-center">
+					<div class="col-7 text-center" style="padding-top: 10px;">
+						<label class="btn btn-secondary btn-sm same-line roboto-font" style="width: 166px; align-items: center; font-size: 16px;">
+						    <input type="file" id="file-input"/>
+						    <i></i> Upload Map File
+						</label>
+					</div>
+				</div>
+				<br>
 
 				<div class="row row-content">
 					<div class="col">
@@ -85,12 +116,15 @@
 
 				<div class="row row-content">
 					<div class="col">
-						<button type="button" class="btn btn-primary" id="create-map-button">Init map</button>
-						<button type="button" class="btn btn-primary" id="download-map-button">Download map</button>
+
+
+							<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+							  Init map
+							</button>
+							<button type="button" class="btn btn-primary" id="download-map-button">Download map</button>
 					</div>
 				</div>
 				<br>
-
 
 				<div class="row row-content">
 					<div class="col">
@@ -121,12 +155,6 @@
 
 				<div class="row row-content">
 					<div class="col">
-						<div class="input-group mb-3">
-						  <div class="input-group-prepend">
-						    <span class="input-group-text">Brush size (r^2)</span>
-						  </div>
-						  <input id="brush-size-input" type="text" class="form-control" placeholder="Brush size" aria-label="Brush size" value="1">
-						</div>
 
 						<div class="input-group mb-3">
 						  <div class="input-group-prepend">

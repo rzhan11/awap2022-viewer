@@ -32,14 +32,14 @@ function getSymTile(tx, ty) {
 
 function applyClickTileGenerator(tx, ty, isP2) {
   // remove old building, icon
-  if (generatorMap[tx][ty] == null) {
+  if (generatorMap[tx][ty] == -1) {
     if (isP2) {
-      generatorMap[tx][ty] = 2;
-    } else {
       generatorMap[tx][ty] = 1;
+    } else {
+      generatorMap[tx][ty] = 0;
     }
   } else {
-    generatorMap[tx][ty] = null;
+    generatorMap[tx][ty] = -1;
   }
 
   setIcon(tx, ty);
@@ -47,16 +47,20 @@ function applyClickTileGenerator(tx, ty, isP2) {
 
 function applyClickTilePopulation(tx, ty) {
   popMap[tx][ty] = parseFloat(brushValueInput.value);
-  console.log(tx, ty, popMap[tx][ty], popGrid[tx][ty].radius);
-
-  popGrid[tx][ty].set("radius", getPopRadius(popMap[tx][ty]));
-  console.log(tx, ty, popMap[tx][ty], popGrid[tx][ty].radius);
+  updatePopulationCanvas(tx, ty);
 }
 
 function applyClickTilePassability(tx, ty) {
   passMap[tx][ty] = parseFloat(brushValueInput.value);
   passMap[tx][ty] = Math.max(Math.min(passMap[tx][ty], GC.MAX_PASS), GC.MIN_PASS);
+  updatePassabilityCanvas(tx, ty);
+}
 
+function updatePopulationCanvas(tx, ty) {
+  popGrid[tx][ty].set("radius", getPopRadius(popMap[tx][ty]));
+}
+
+function updatePassabilityCanvas(tx, ty) {
   passGrid[tx][ty].set("fill", getPassColor(passMap[tx][ty]));
 }
 
@@ -95,7 +99,6 @@ function applyClick(tx, ty, mouseDown, isSym) {
     ty = symTile[1];
   }
 
-  var brushSize = parseInt(brushSizeInput.value);
   // make updates
   applyClickTile(tx, ty, mouseDown, isSym);
 
@@ -270,7 +273,7 @@ function initCanvasObjects() {
       textGrid[i][j] = drawText("", p[0], p[1], 15, BLACK);
       textGrid[i][j].set("visible", false);
 
-      // setIcon(i, j);
+      setIcon(i, j);
     }
   }
 
@@ -332,14 +335,14 @@ function getTileIndex(i, j) {
 
 function setIcon(i, j) {
   // console.log(i, j, curFrame[i][j])
-  if (generatorMap[i][j] == 0) {
+  if (generatorMap[i][j] == -1) {
     textGrid[i][j].set("visible", false);
     shadeGrid[i][j].set("visible", false)
   } else {
     var color;
-    if (generatorMap[i][j] == 1) {
+    if (generatorMap[i][j] == 0) {
       color = "red";
-    } else if (generatorMap[i][j] == 2) {
+    } else if (generatorMap[i][j] == 1) {
       color = "blue"
     }
 
@@ -380,7 +383,22 @@ function getRadioValue(name) {
     return null;
 }
 
-function loadMapSettings() {
+function setRadioValue(name, option) {
+    var ele = document.getElementsByName(name);
+
+    for (var i = 0; i < ele.length; i++) {
+      ele[i].checked = (ele[i].value == option);
+    }
+}
+
+function loadMapSettings(obj) {
+  if (obj != null) {
+    mapWidthInput.value = obj["tile_info"].length;
+    mapHeightInput.value = obj["tile_info"][0].length;
+
+    setRadioValue("symmetry-radio", obj["symmetry"]);
+  }
+
   frameWidth = parseInt(mapWidthInput.value);
   frameHeight = parseInt(mapHeightInput.value);
 
@@ -389,23 +407,64 @@ function loadMapSettings() {
   console.log("Map settings " + frameWidth + " " + frameHeight + " " + mapSymmetry)
 }
 
-function initMap(data) {
+function initMap(obj) {
   console.log("Resetting map");
 
+  if (!("generators" in obj)) {
+    obj = null;
+  }
+
   // read frameWidth
-  loadMapSettings();
+  loadMapSettings(obj);
 
   passMap = init2DArray(frameWidth, frameHeight, 1);
   popMap = init2DArray(frameWidth, frameHeight, 0);
-  generatorMap = init2DArray(frameWidth, frameHeight, null);
+  generatorMap = init2DArray(frameWidth, frameHeight, -1);
 
   // clear
   clearFrame();
+
+  if (obj != null) {
+    console.log(obj)
+
+    // add map
+    var tiles = obj["tile_info"];
+    for (var x = 0; x < frameWidth; x++) {
+      for (var y = 0; y < frameHeight; y++) {
+        passMap[x][y] = tiles[x][y][0];
+        popMap[x][y] = tiles[x][y][1];
+      }
+    }
+
+    // add generators
+    for (var t = 0; t < obj["generators"].length; t++) {
+      for (var loc of obj["generators"][t]) {
+        generatorMap[loc[0]][loc[1]] = t;
+      }
+    }
+  }
+
   initCanvasObjects();
 }
 
 createMapButton.onclick = initMap;
 
+fileInput.addEventListener("change", uploadMap, false);
+function uploadMap(event) {
+  if (event.target.files.length > 0) {
+    var reader = new FileReader();
+    reader.onload = function(event) {
+      // do stuff here
+      loadData(event.target.result);
+      fileInput.value = null;
+    }
+    reader.readAsText(event.target.files[0]);
+  }
+}
+
+function loadData(data) {
+  initMap(JSON.parse(data));
+}
 
 
 function updateTooltip(tx, ty) {
@@ -488,15 +547,16 @@ function downloadMap() {
       simpleMap[x][y] = [passMap[x][y], popMap[x][y]];
 
       // add generator
-      if (generatorMap[x][y] != null) {
+      if (generatorMap[x][y] != -1) {
         var t = generatorMap[x][y];
-        generators[t - 1].push([x, y]);
+        generators[t].push([x, y]);
       }
     }
   }
 
 
   var dataObj = {
+    "symmetry": mapSymmetry,
     "generators": generators,
     "tile_info": simpleMap,
   }
