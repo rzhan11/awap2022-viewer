@@ -5,8 +5,8 @@ This is the viewer for AWAP 2022 game. Run matches between bots using the [game 
 This also contains a mapmaker tool for the game. Competitors are encouraged to create their own custom maps to ensure that their bot works for various kinds of maps (the final competition's maps will be hidden and will not be the same as the initially given maps).
 
 To access the viewer/mapmaker without locally installing this repo, use the following links
-* [Viewer](http://awap2022.com:8080/viewer)
-* [Mapmaker](http://awap2022.com:8080/mapmaker)
+* [Viewer link](http://awap2022.com:8080/viewer)
+* [Mapmaker link](http://awap2022.com:8080/mapmaker)
 
 ### Requirements:
 * [Node.js](https://nodejs.org/en/download/)

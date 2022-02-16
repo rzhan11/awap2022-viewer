@@ -407,12 +407,17 @@ function loadMapSettings(obj) {
   console.log("Map settings " + frameWidth + " " + frameHeight + " " + mapSymmetry)
 }
 
-function initMap(obj) {
+function initMap(obj, fileName) {
   console.log("Resetting map");
 
   if (!("generators" in obj)) {
     obj = null;
   }
+
+  if (fileName === undefined) {
+    fileName = "";
+  }
+  fileNameText.innerHTML = fileName;
 
   // read frameWidth
   loadMapSettings(obj);
@@ -455,15 +460,21 @@ function uploadMap(event) {
     var reader = new FileReader();
     reader.onload = function(event) {
       // do stuff here
-      loadData(event.target.result);
+      loadData(event.target.result, fileInput.value);
       fileInput.value = null;
     }
     reader.readAsText(event.target.files[0]);
   }
 }
 
-function loadData(data) {
-  initMap(JSON.parse(data));
+function loadData(data, path) {
+  var i = path.lastIndexOf("\\");
+  if (i < 0) {
+    i = path.lastIndexOf("/");
+  }
+  var fileName = path.substring(i + 1);
+  console.log(fileName);
+  initMap(JSON.parse(data), fileName);
 }
 
 

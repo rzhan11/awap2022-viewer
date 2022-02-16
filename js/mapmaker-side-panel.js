@@ -14,3 +14,4 @@ var tooltipStructText = document.getElementById("tooltip-struct-text");
 var brushValueInput = document.getElementById("brush-value-input");
 
 var fileInput = document.getElementById("file-input");
+var fileNameText = document.getElementById("file-name-text");
