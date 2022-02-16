@@ -34,16 +34,6 @@
 		</div>
 	</div>
 
-	<div id="metadata-modal" class="modal fade" role="dialog">
-		<div class="modal-dialog modal-lg" role="content">
-			<div class="modal-content">
-				<div class="modal-body">
-					<p id="metadata-text">Load a replay to view metadata</p>
-				</div>
-			</div>
-		</div>
-	</div>
-
 	<div class="container-fluid">
 		<div class="row row-content">
 			<div class="col-8 sync-canvas">
@@ -73,12 +63,22 @@
 				<!-- </div> -->
 
 				<div class="row row-content justify-content-center">
-					<div class="col-7 text-center" style="padding-top: 10px;">
+					<div class="col text-center" style="padding-top: 10px;">
 						<label class="btn btn-secondary btn-sm same-line roboto-font" style="width: 166px; align-items: center; font-size: 16px;">
 						    <input type="file" id="file-input"/>
 						    <i></i> Upload Replay File
 						</label>
+
+						<div id="metadata-div" hidden>
+							<span id="metadata-p1-text"></span> vs <span id="metadata-p2-text"></span> on <span id="metadata-map-text" style="font-weight: 900;"></span>
+
+						</div>
+						<!-- <br> -->
+						<!-- <span id="file-name-text" style="font-weight: bold"></span> -->
 					</div>
+				</div>
+
+				<div id="metadata-div" >
 				</div>
 
 				<div class="row row-content">

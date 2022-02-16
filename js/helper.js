@@ -10,3 +10,24 @@ function init2DArray(width, height, el) {
   }
   return arr;
 }
+
+
+function getFileNameFromPath(path) {
+  if (path.includes("\\")) {
+    path = path.substring(path.lastIndexOf("\\") + 1);
+  }
+  if (path.includes("/")) {
+    path = path.substring(path.lastIndexOf("/") + 1);
+  }
+  return path;
+}
+
+
+function getFileNameFromPathNoExtension(path) {
+  var s = getFileNameFromPath(path)
+  if (s.includes(".")) {
+    return s.substring(0, s.lastIndexOf("."));
+  } else {
+    return s;
+  }
+}

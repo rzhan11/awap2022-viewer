@@ -14,7 +14,10 @@ $(document).ready(function() {
 var fileInput = document.getElementById("file-input");
 
 // metadata
-var metadataText = document.getElementById("metadata-text");
+var metadataDiv = document.getElementById("metadata-div");
+var metadataP1Text = document.getElementById("metadata-p1-text");
+var metadataP2Text = document.getElementById("metadata-p2-text");
+var metadataMapText = document.getElementById("metadata-map-text");
 
 // frame control elements
 var frameSpeed = 8;

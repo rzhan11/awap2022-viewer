@@ -385,7 +385,7 @@ function uploadReplay(event) {
     var reader = new FileReader();
     reader.onload = function(event) {
       // do stuff here
-      loadData(event.target.result);
+      loadData(event.target.result, fileInput.value);
       fileInput.value = null;
     }
     reader.readAsText(event.target.files[0]);
@@ -399,6 +399,7 @@ function loadData(data) {
   console.log(obj);
 
   metadata = obj["metadata"];
+
 
   GC = obj.game_constants;
 
@@ -539,9 +540,12 @@ function calculateUnitStats() {
 }
 
 function displayMetadata() {
-  metadataText.innerHTML = "Team RED: " + metadata.p1_name + "<br>";
-  metadataText.innerHTML += "Team BLUE: " + metadata.p2_name + "<br>";
-  metadataText.innerHTML += "Engine Version: " + metadata.version;
+  metadataDiv.hidden = false;
+  metadataP1Text.innerHTML = getFileNameFromPathNoExtension(metadata.p1_name);
+  metadataP1Text.style.color = RED;
+  metadataP2Text.innerHTML = getFileNameFromPathNoExtension(metadata.p2_name);
+  metadataP2Text.style.color = BLUE;
+  metadataMapText.innerText = getFileNameFromPathNoExtension(metadata.map_name);
 };
 
 prevRoundButton.onclick = stepPrevRound;

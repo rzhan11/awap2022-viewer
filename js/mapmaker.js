@@ -468,11 +468,7 @@ function uploadMap(event) {
 }
 
 function loadData(data, path) {
-  var i = path.lastIndexOf("\\");
-  if (i < 0) {
-    i = path.lastIndexOf("/");
-  }
-  var fileName = path.substring(i + 1);
+  var fileName = getFileNameFromPath(path);
   console.log(fileName);
   initMap(JSON.parse(data), fileName);
 }
