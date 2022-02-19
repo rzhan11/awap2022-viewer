@@ -21,6 +21,8 @@ var metadataMapText = document.getElementById("metadata-map-text");
 
 var p1TimeText = document.getElementById("p1-time-text");
 var p2TimeText = document.getElementById("p2-time-text");
+var timeDiv = document.getElementById("time-div");
+
 var winnerText = document.getElementById("winner-text");
 var winnerDiv = document.getElementById("winner-div");
 

@@ -360,6 +360,9 @@ var blueMoneyHistory;
 var redUtilityHistory;
 var blueUtilityHistory;
 
+var timeBankHistory;
+var timeUsedHistory;
+
 var metadata = {};
 var GC;
 
@@ -433,6 +436,9 @@ function loadData(data) {
   }
 
   bidHistory = obj["bid_history"];
+
+  timeBankHistory = obj["time_bank_history"]
+  timeUsedHistory = obj["prev_time_history"]
 
   structName2ID = {};
   structID2Name = {};
@@ -698,9 +704,12 @@ function displayGameInfo() {
   utilityLineChart.data.labels = roundLabels;
   utilityLineChart.update();
 
+  // show timing
+  timeDiv.hidden = false;
+  p1TimeText.innerHTML = timeUsedHistory[roundNum][0].toFixed(2) + " (" + timeBankHistory[roundNum][0].toFixed(1) + ")";
+  p2TimeText.innerHTML = timeUsedHistory[roundNum][1].toFixed(2) + " (" + timeBankHistory[roundNum][1].toFixed(1) + ")";
+
   // show winner (if needed)
-
-
   console.log(metadata)
   if (roundNum == metadata.maxRound) {
     winnerDiv.hidden = false;
