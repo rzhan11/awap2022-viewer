@@ -1,6 +1,6 @@
 # AWAP 2022 Viewer
 
-This is the viewer for AWAP 2022 game. Run matches between bots using the [game engine](https://github.com/rzhan11/awap2022-engine.git). Upload the generated replay files to this viewer to view the match.
+This is the viewer for AWAP 2022 game. Run matches between bots using the [game engine](https://github.com/rzhan11/awap2022-engine-public.git). Upload the generated replay files to this viewer to view the match.
 
 This also contains a mapmaker tool for the game. Competitors are encouraged to create their own custom maps to ensure that their bot works for various kinds of maps (the final competition's maps will be hidden and will not be the same as the initially given maps).
 

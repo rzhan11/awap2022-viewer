@@ -19,6 +19,11 @@ var metadataP1Text = document.getElementById("metadata-p1-text");
 var metadataP2Text = document.getElementById("metadata-p2-text");
 var metadataMapText = document.getElementById("metadata-map-text");
 
+var p1TimeText = document.getElementById("p1-time-text");
+var p2TimeText = document.getElementById("p2-time-text");
+var winnerText = document.getElementById("winner-text");
+var winnerDiv = document.getElementById("winner-div");
+
 // frame control elements
 var frameSpeed = 8;
 var minFrameSpeed = 1;

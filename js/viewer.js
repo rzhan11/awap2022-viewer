@@ -214,12 +214,11 @@ function initCanvasObjects() {
 
   // tower cover
   var towerCoverGrid = [];
-  var towerR2 = GC.TOWER_RADIUS;
-  var maxDiff = Math.floor(Math.sqrt(towerR2));
+  var maxDiff = Math.floor(GC.TOWER_RADIUS);
   for (var dx = -maxDiff; dx <= maxDiff; dx++) {
     for (var dy = -maxDiff; dy <= maxDiff; dy++) {
       var r2 = dx * dx + dy * dy;
-      if (r2 <= towerR2) {
+      if (r2 <= Math.pow(GC.TOWER_RADIUS, 2)) {
         var x = dx * fullTileSize;
         var y = dy * fullTileSize;
         var rect = drawRect(x, y, fullTileSize, fullTileSize, MEDIUM_GRAY, 0.5);
@@ -399,6 +398,7 @@ function loadData(data) {
   console.log(obj);
 
   metadata = obj["metadata"];
+  metadata.winner = obj.winner;
 
 
   GC = obj.game_constants;
@@ -540,12 +540,14 @@ function calculateUnitStats() {
 }
 
 function displayMetadata() {
+  var p1name = getFileNameFromPathNoExtension(metadata.p1_name);
+
   metadataDiv.hidden = false;
   metadataP1Text.innerHTML = getFileNameFromPathNoExtension(metadata.p1_name);
   metadataP1Text.style.color = RED;
   metadataP2Text.innerHTML = getFileNameFromPathNoExtension(metadata.p2_name);
   metadataP2Text.style.color = BLUE;
-  metadataMapText.innerText = getFileNameFromPathNoExtension(metadata.map_name);
+  metadataMapText.innerHTML = getFileNameFromPathNoExtension(metadata.map_name);
 };
 
 prevRoundButton.onclick = stepPrevRound;
@@ -695,6 +697,23 @@ function displayGameInfo() {
   utilityLineChart.data.datasets[1].data = blueUtilityHistory.slice(leftRange, rightRange);
   utilityLineChart.data.labels = roundLabels;
   utilityLineChart.update();
+
+  // show winner (if needed)
+
+
+  console.log(metadata)
+  if (roundNum == metadata.maxRound) {
+    winnerDiv.hidden = false;
+    if (metadata.winner == 1) {
+      winnerText.innerHTML = metadataP1Text.innerHTML;
+      winnerText.style.color = RED;
+    } else {
+      winnerText.innerHTML = metadataP2Text.innerHTML;
+      winnerText.style.color = BLUE;
+    }
+  } else {
+    winnerDiv.hidden = true;
+  }
 }
 
 function updateTooltip(e) {
