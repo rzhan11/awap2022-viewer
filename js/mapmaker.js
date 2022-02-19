@@ -2,7 +2,7 @@
 
 var GC = {
   "MIN_PASS": 1,
-  "MAX_PASS": 100,
+  "MAX_PASS": 10,
   "MIN_POP": 0,
   "MAX_POP": 10,
 }
